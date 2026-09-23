@@ -18,12 +18,12 @@ When playing around a physical table with a projector/TV showing the map to play
 
 ## Features
 
-- **Smart Party & Player Detection**: Automatically identifies player characters via PF2e Party membership (`game.actors.party.members`, `actor.parties`, `alliance: "party"`), character type, and token ownership.
+- **Smart Party & Player Detection**: Automatically identifies player characters via party membership, character type, and token ownership.
 - **Selective Interception**:
   - **Public Player Rolls** (Attacks, Saves, Skills, Damage) $\rightarrow$ Fast popup on GM screen to input physical dice.
   - **Secret / Blind Rolls** (Recall Knowledge, Stealth, Secret Perception) $\rightarrow$ Automatically rolls digital RNG (keeps results hidden).
   - **NPC & Monster Rolls** $\rightarrow$ Automatically rolls digital RNG.
-- **Keyboard-First Dialog (`ApplicationV2`)**:
+- **Keyboard-First Dialog**:
   - Automatically focuses the primary die input.
   - Press `Enter` to confirm roll.
   - Press `Space` or click "Roll Digital" for instantaneous fallback to digital RNG.
@@ -55,7 +55,17 @@ https://github.com/ynsta/pp-dice/releases/latest/download/module.json
 
 ---
 
-## Development & Build
+## Development & Architecture
+
+### Technical Highlights
+
+- **Roll Interception**: Uses `libWrapper` to wrap `Roll.prototype._evaluate`, injecting physical dice results into `term.results` before evaluation while preserving core AST math, Pathfinder 2e multiple attack penalties, and degrees of success.
+- **Modern UI (`ApplicationV2`)**: Built on Foundry v14's `foundry.applications.api.ApplicationV2` with `HandlebarsApplicationMixin` for responsive, accessible keyboard navigation.
+- **Context Resolution**: Modular provider architecture (`PF2eContextProvider`, `GenericContextProvider`) checking `game.actors.party.members`, `actor.parties`, and `actor.hasPlayerOwner`.
+- **Sequential Queue**: Concurrency-safe queue preventing overlapping modals during multi-target spells.
+- **Documentation Plane**: Detailed specifications and architecture design docs are available in [`docs/design/`](docs/design/00-index.md), [`docs/spec/`](docs/spec/00-index.md), and [`docs/adr/`](docs/adr/00-index.md).
+
+### Dev Workflow & Build
 
 Developed in WSL 2 with live synchronization to Windows Foundry.
 

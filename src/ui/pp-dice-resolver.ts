@@ -229,10 +229,6 @@ export class PPDiceResolverApp extends getBaseApplicationClass() {
     if (typeof window !== 'undefined') {
       window.addEventListener('keydown', this.keyHandler, true);
     }
-
-    if (this.element) {
-      this.element.addEventListener('keydown', (e: KeyboardEvent) => this._onKeyDown(e));
-    }
   }
 
   _onRender(context: unknown, options: unknown) {
@@ -247,7 +243,7 @@ export class PPDiceResolverApp extends getBaseApplicationClass() {
       firstInput.select?.();
     }
 
-    // Attach keydown directly to each input.die-input
+    // Attach Enter keydown directly to each input.die-input
     const dieInputs = Array.from(
       html.querySelectorAll?.('input.die-input') ?? []
     ) as HTMLInputElement[];
@@ -261,9 +257,7 @@ export class PPDiceResolverApp extends getBaseApplicationClass() {
           } else {
             form.dispatchEvent(new Event('submit', { cancelable: true }));
           }
-          return;
         }
-        this._onKeyDown(e);
       });
     }
 

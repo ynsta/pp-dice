@@ -71,11 +71,6 @@ export function registerSceneControls(): void {
   });
 }
 
-export function registerControls(): void {
-  registerKeybindings();
-  registerSceneControls();
-}
-
 export function toggleEnabled(): boolean {
   const game = (globalThis as any).game;
   const ui = (globalThis as any).ui;
@@ -84,7 +79,12 @@ export function toggleEnabled(): boolean {
   game.settings.set(MODULE_ID, SETTINGS.ENABLED, next);
 
   const status = next ? 'Enabled' : 'Disabled';
-  ui?.notifications?.info(`Physical Play Dice: ${status}`);
+  const fallback = `Physical Play Dice: ${status}`;
+  const key = next ? 'PP_DICE.ToggleEnabled' : 'PP_DICE.ToggleDisabled';
+  const localized = game?.i18n?.localize ? game.i18n.localize(key) : undefined;
+  const message = localized && localized !== key ? localized : fallback;
+
+  ui?.notifications?.info(message);
   ui?.controls?.render();
   return next;
 }

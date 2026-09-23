@@ -1,11 +1,15 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import * as fs from 'node:fs';
+import pkg from './package.json';
+
+const isTest = Boolean(process.env.VITEST);
 
 function foundrySyncPlugin() {
   return {
     name: 'foundry-sync',
     closeBundle: async () => {
+      if (isTest) return;
       const configPath = resolve(__dirname, 'foundryconfig.json');
       if (fs.existsSync(configPath)) {
         try {
@@ -27,6 +31,9 @@ function foundrySyncPlugin() {
 }
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -82,6 +89,6 @@ export default defineConfig({
         }
       },
     },
-    foundrySyncPlugin(),
+    ...(!isTest ? [foundrySyncPlugin()] : []),
   ],
 });

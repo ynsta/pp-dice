@@ -51,11 +51,6 @@ Hooks?.once('init', () => {
   registerInterception();
 });
 
-// Defensive keybinding registration if module is loaded when init is already running
-if ((globalThis as any).game?.keybindings && !(globalThis as any).game?.keybindings?.bindings) {
-  registerKeybindings();
-}
-
 export function onDiceSoNiceMessagePreProcess(
   messageId: string,
   interception: { willTrigger3DRoll: boolean }
@@ -98,7 +93,7 @@ Hooks?.once('ready', () => {
   });
 
   console.log(
-    `%c[${MODULE_ID}] v1.0.9 Ready! Physical dice interception active for player rolls.`,
+    `%c[${MODULE_ID}] v${__APP_VERSION__} Ready! Physical dice interception active for player rolls.`,
     'color: #00aa44; font-weight: bold;'
   );
 });

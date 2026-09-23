@@ -324,35 +324,35 @@ describe('PPDiceResolver & PPDiceResolverApp Keyboard and Submit UX', () => {
       expect(onKeyDownSpy).toHaveBeenCalledWith(event);
     });
 
-    it('attaches keydown directly to input in _onRender and handles Escape/R on focused input', () => {
+    it('handles Escape/R on focused input via window capture listener (L2)', () => {
       const { app, input } = setupAppWithForm();
       const closeSpy = vi.spyOn(app, 'close').mockResolvedValue(undefined as any);
 
-      app._onRender({}, {});
+      app._attachFrameListeners();
 
       const escEvent = new MockKeyboardEvent('keydown', {
         key: 'Escape',
         code: 'Escape',
         target: input,
       });
-      input.dispatchEvent(escEvent);
+      (globalThis as any).window.dispatchEvent(escEvent);
 
       expect(escEvent.defaultPrevented).toBe(true);
       expect(mockResolver.submitDigital).toHaveBeenCalledTimes(1);
       expect(closeSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('suppresses Space on focused die input', () => {
+    it('suppresses Space on focused die input via window capture listener (L2)', () => {
       const { app, input } = setupAppWithForm();
 
-      app._onRender({}, {});
+      app._attachFrameListeners();
 
       const spaceEvent = new MockKeyboardEvent('keydown', {
         key: ' ',
         code: 'Space',
         target: input,
       });
-      input.dispatchEvent(spaceEvent);
+      (globalThis as any).window.dispatchEvent(spaceEvent);
 
       expect(spaceEvent.defaultPrevented).toBe(true);
       expect(spaceEvent.propagationStopped).toBe(true);

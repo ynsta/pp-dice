@@ -61,13 +61,29 @@ describe('Controls & Keybindings', () => {
     expect(mockGame.keybindings.register).not.toHaveBeenCalled();
   });
 
-  it('toggles enabled setting and renders controls', () => {
+  it('toggles enabled setting and renders controls with fallback notification', () => {
     const nextState = toggleEnabled();
 
     expect(nextState).toBe(false);
     expect(mockGame.settings.set).toHaveBeenCalledWith(MODULE_ID, SETTINGS.ENABLED, false);
     expect(mockUi.notifications.info).toHaveBeenCalledWith('Physical Play Dice: Disabled');
     expect(mockUi.controls.render).toHaveBeenCalled();
+  });
+
+  it('localizes toggle notification when game.i18n is available', () => {
+    mockGame.i18n = {
+      localize: vi.fn((key: string) => {
+        if (key === 'PP_DICE.ToggleDisabled') return 'Physical dice disabled';
+        if (key === 'PP_DICE.ToggleEnabled') return 'Physical dice enabled';
+        return key;
+      }),
+    };
+
+    const nextState = toggleEnabled();
+
+    expect(nextState).toBe(false);
+    expect(mockGame.i18n.localize).toHaveBeenCalledWith('PP_DICE.ToggleDisabled');
+    expect(mockUi.notifications.info).toHaveBeenCalledWith('Physical dice disabled');
   });
 
   it('registers scene control toggle on Foundry v14 record-based controls', () => {

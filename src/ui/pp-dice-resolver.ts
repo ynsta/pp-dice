@@ -106,6 +106,7 @@ function createResolverAppClass() {
 
   return class extends HandlebarsApplicationMixin(ApplicationV2) {
     private resolver: PPDiceResolver;
+    private keyHandler?: (e: KeyboardEvent) => void;
 
     constructor(resolver: PPDiceResolver, options: Record<string, unknown> = {}) {
       super(options);
@@ -155,22 +156,41 @@ function createResolverAppClass() {
         firstInput.select();
       }
 
-      html.addEventListener('keydown', (e: KeyboardEvent) => {
-        // Press Escape or 'r' / 'R' anywhere (even inside input) to immediately roll digital
-        if (e.key === 'Escape' || e.key === 'r' || e.key === 'R') {
-          e.preventDefault();
-          e.stopPropagation();
-          this.resolver.submitDigital();
-          this.close();
-          return;
-        }
+      // Clean up previous window listener if re-rendering
+      if (this.keyHandler) {
+        window.removeEventListener('keydown', this.keyHandler, true);
+      }
 
+      const handleKey = (e: KeyboardEvent) => {
         // Prevent Space from triggering Foundry global pause while resolver is active
         if (e.code === 'Space') {
           e.preventDefault();
           e.stopPropagation();
+          return;
         }
-      });
+
+        // Allow browser reload (Ctrl+R / Cmd+R)
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+        // Escape, 'r', 'R', or code 'KeyR' triggers instant digital roll fallback
+        if (
+          e.key === 'Escape' ||
+          e.code === 'Escape' ||
+          e.key === 'r' ||
+          e.key === 'R' ||
+          e.code === 'KeyR'
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          this.resolver.submitDigital();
+          this.close();
+        }
+      };
+
+      this.keyHandler = handleKey;
+      // Capture on window so Escape and R work even when input fields have focus
+      window.addEventListener('keydown', handleKey, true);
 
       const digitalBtn = html.querySelector('.btn-digital');
       digitalBtn?.addEventListener('click', (e: Event) => {
@@ -209,7 +229,19 @@ function createResolverAppClass() {
       });
     }
 
+    _onClose(options: unknown) {
+      if (this.keyHandler) {
+        window.removeEventListener('keydown', this.keyHandler, true);
+        this.keyHandler = undefined;
+      }
+      super._onClose(options);
+    }
+
     async close(options?: unknown) {
+      if (this.keyHandler) {
+        window.removeEventListener('keydown', this.keyHandler, true);
+        this.keyHandler = undefined;
+      }
       this.resolver.submitDigital();
       return super.close(options);
     }

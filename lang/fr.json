@@ -11,7 +11,7 @@
     "ToggleHint": "Raccourci clavier pour activer/désactiver l'interception des dés physiques.",
     "ResolverTitle": "Saisie du dé physique",
     "Submit": "Confirmer le jet",
-    "DigitalRoll": "Lancer virtuel (Échap)",
+    "DigitalRoll": "Lancer virtuel (Échap / R)",
     "DigitalRollHint": "Appuyez sur Échap, 'R' ou cliquez pour lancer virtuellement",
     "DiePrompt": "Saisir le résultat pour",
     "DieRange": "Entre {min} et {max}",

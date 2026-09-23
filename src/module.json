@@ -2,7 +2,7 @@
   "id": "pp-dice",
   "title": "Physical Play Dice",
   "description": "Intercepts public player rolls for in-person tabletop gaming, allowing GM input of raw physical dice while calculating all system modifiers automatically.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "compatibility": {
     "minimum": "14.360",
     "verified": "14.368"

@@ -1,0 +1,70 @@
+# Physical Play Dice (`pp-dice`)
+
+[![Foundry VTT v14](https://img.shields.io/badge/Foundry-v14-orange.svg)](https://foundryvtt.com)
+[![PF2e Compatible](https://img.shields.io/badge/PF2e-8.5.1+-blue.svg)](https://github.com/foundryvtt/pf2e)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+**Physical Play Dice** (`pp-dice`) is a Foundry VTT module built for in-person tabletop gaming sessions.
+
+When playing around a physical table with a projector/TV showing the map to players without a HUD (e.g. using _Monk's Common Display_), players roll their real physical dice. The GM triggers actions in Foundry on their behalf. `pp-dice` intercepts public player rolls to prompt for the raw physical dice results, allowing Foundry and Pathfinder 2e to automatically calculate all modifiers, multiple attack penalties, criticals, and degrees of success.
+
+---
+
+## Features
+
+- **Smart Party & Player Detection**: Automatically identifies player characters via PF2e Party membership (`game.actors.party.members`, `actor.parties`, `alliance: "party"`), character type, and token ownership.
+- **Selective Interception**:
+  - **Public Player Rolls** (Attacks, Saves, Skills, Damage) $\rightarrow$ Fast popup on GM screen to input physical dice.
+  - **Secret / Blind Rolls** (Recall Knowledge, Stealth, Secret Perception) $\rightarrow$ Automatically rolls digital RNG (keeps results hidden).
+  - **NPC & Monster Rolls** $\rightarrow$ Automatically rolls digital RNG.
+- **Keyboard-First Dialog (`ApplicationV2`)**:
+  - Automatically focuses the primary die input.
+  - Press `Enter` to confirm roll.
+  - Press `Space` or click "Roll Digital" for instantaneous fallback to digital RNG.
+  - Grouped inputs for multi-die damage (e.g., 2d6, 3d8).
+- **Fortune & Misfortune Support**: Shows clear visual badges (`Fortune — Keep Highest` / `Misfortune — Keep Lowest`) and prompts for both d20 dice.
+- **Sequential Queue**: Seamlessly queues rolls when multiple saving throws or actions trigger sequentially (e.g., Area of Effect spells).
+- **Chat Log Badges**: Tags manual rolls with a subtle `Physical Roll` badge in chat.
+- **Dice So Nice Support**: 3D dice land directly on the numbers rolled physically at the table.
+- **Quick Session Toggle**: Press `Alt+P` or use the token control tool to enable/disable interception on the fly.
+
+---
+
+## Installation
+
+### Manifest URL
+
+In Foundry VTT, navigate to **Configuration and Setup** $\rightarrow$ **Add-on Modules** $\rightarrow$ **Install Module**, and paste the manifest link:
+
+```
+https://github.com/ynsta/pp-dice/releases/latest/download/module.json
+```
+
+---
+
+## Development & Build
+
+Developed in WSL 2 with live synchronization to Windows Foundry.
+
+```bash
+# Install dependencies
+npm install
+
+# Dev loop with auto-sync to Windows Foundry
+npm run dev
+
+# Run unit tests (Vitest)
+npm run test
+
+# Run strict linter
+npm run lint
+
+# Compile for production
+npm run build
+```
+
+---
+
+## License
+
+[MIT](LICENSE) © [ynsta](https://github.com/ynsta)

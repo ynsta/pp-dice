@@ -12,14 +12,22 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynsta/pp-dice.git"
+  },
   "keywords": [
     "foundryvtt",
     "pf2e",
     "dice",
     "physical-play"
   ],
-  "author": "stany",
+  "author": "ynsta",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ynsta/pp-dice/issues"
+  },
+  "homepage": "https://github.com/ynsta/pp-dice#readme",
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@types/node": "^22.9.0",

@@ -4,7 +4,8 @@
 
 **Goal:** Implement all verified fixes from the Claude Opus 5.5 review (`~/Work/2026-09-23-pp-dice-review-claude-opus-5.5.md`) covering scene controls on v14, resolver error/key capture hardening, secret roll detection, input validation, DSN animation skip, code quality, i18n, privacy, and docs.
 
-**Architecture:** 
+**Architecture:**
+
 - Scene controls: defensively adapt to v14 `Record<string, SceneControl>` with `tokens` key and `onChange` callback while retaining backwards compatibility.
 - Resolver: catch async dialog render failures to avoid roll queue deadlocks; scope window keydown capture to dialog element or body; validate numeric inputs in `1..faces`.
 - Roll Secrecy & Detection: unify secret roll detection (`options.messageMode`, `rollMode`, `core.messageMode` setting) in a shared helper; check `roll._root` for sub-rolls; detect fortune/misfortune via `DiceTerm.modifiers` instead of substring matching; restrict token fallback to player-owned actors.
@@ -16,6 +17,7 @@
 **Spec:** `docs/spec/physical-dice-interception.md`, `docs/design/architecture.md`, `~/Work/2026-09-23-pp-dice-review-claude-opus-5.5.md`
 
 ## Global Constraints
+
 - Target Foundry version floor: `14.360`, verified `14.368`.
 - Strictly adhere to TDD: write failing test, verify failure, implement minimal code, verify pass.
 - Maintain existing test passing rate (36/36 tests currently pass).
@@ -26,10 +28,12 @@
 ### Task 1: Fix Scene Controls on Foundry v14 (H1)
 
 **Files:**
+
 - Modify: `src/ui/controls.ts:31-54`
 - Test: `tests/controls.test.ts`
 
 **Interfaces:**
+
 - `registerSceneControls(): void`
 - Hook `getSceneControlButtons`: handles both `Record<string, any>` (Foundry v13+) and array (v12-). In v13+, uses `controls.tokens.tools` record and `onChange: (event: any, active: boolean) => void`.
 
@@ -77,6 +81,7 @@ Expected: FAIL with `controls.find is not a function` or missing tool property o
 
 In `src/ui/controls.ts`:
 Update `registerSceneControls`:
+
 ```ts
 export function registerSceneControls(): void {
   const game = (globalThis as any).game;
@@ -139,16 +144,19 @@ git commit -m "fix: support Foundry v14 scene controls Record API (H1)"
 ### Task 2: Resolver Async Render Catch & Scoped Keydown Capture (H2 & H3)
 
 **Files:**
+
 - Modify: `src/ui/pp-dice-resolver.ts:42-53, 164-207`
 - Test: `tests/resolver.test.ts`
 
 **Interfaces:**
+
 - `PPDiceResolver.renderDialog(): void` catches rejection from `app.render({ force: true })` and triggers `this.submitDigital()`.
 - `PPDiceResolverApp._onKeyDown(e: KeyboardEvent): void` checks `this.element?.contains(e.target as Node) || e.target === document.body || e.target === null`.
 
 - [ ] **Step 1: Write failing tests for render rejection and scoped keydown**
 
 In `tests/resolver.test.ts`:
+
 ```ts
 it('falls back to submitDigital if app.render rejects asynchronously (H2)', async () => {
   const roll = { formula: '1d20', terms: [{ faces: 20, number: 1 }] } as any;
@@ -196,7 +204,9 @@ Expected: FAIL on render rejection test (hangs or unhandled rejection).
 - [ ] **Step 3: Implement render error handling and keydown scoping**
 
 In `src/ui/pp-dice-resolver.ts`:
+
 1. In `renderDialog()`:
+
 ```ts
   private renderDialog(): void {
     const foundryGlobal = (globalThis as unknown as { foundry?: any }).foundry;
@@ -223,6 +233,7 @@ In `src/ui/pp-dice-resolver.ts`:
 ```
 
 2. In `_onKeyDown(e: KeyboardEvent)`:
+
 ```ts
   _onKeyDown(e: KeyboardEvent): void {
     const target = e.target as HTMLElement | null;
@@ -275,11 +286,13 @@ git commit -m "fix: catch resolver render rejection and scope keydown capture (H
 ### Task 3: Unified Secret Detection, Sub-Roll Bypass, Fortune Check, and Token Overmatch (H4, M4, M5, M6)
 
 **Files:**
+
 - Create: `src/core/roll-helpers.ts`
 - Modify: `src/providers/generic.ts`, `src/providers/pf2e.ts`, `src/core/interceptor.ts:31-47`
 - Test: `tests/roll-helpers.test.ts`, `tests/context-manager.test.ts`
 
 **Interfaces:**
+
 - `isSecretRoll(roll: any, options?: Record<string, any>): boolean`
   - Checks `options.allowInteractive === false`
   - Checks `roll.options?.isPrivate === true`
@@ -293,6 +306,7 @@ git commit -m "fix: catch resolver render rejection and scope keydown capture (H
 - [ ] **Step 1: Write failing tests for roll helpers**
 
 In `tests/roll-helpers.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest';
 import { isSecretRoll, isFortuneRoll, isMisfortuneRoll } from '../src/core/roll-helpers';
@@ -310,13 +324,19 @@ describe('Roll Helpers', () => {
   });
 
   it('detects fortune and misfortune only on 2d20 with modifiers, not flavor text (M5)', () => {
-    const khopeshRoll = { formula: '1d20 + 5[khopesh]', terms: [{ faces: 20, number: 1, modifiers: [] }] };
+    const khopeshRoll = {
+      formula: '1d20 + 5[khopesh]',
+      terms: [{ faces: 20, number: 1, modifiers: [] }],
+    };
     expect(isFortuneRoll(khopeshRoll)).toBe(false);
 
     const fortuneRoll = { formula: '2d20kh', terms: [{ faces: 20, number: 2, modifiers: ['kh'] }] };
     expect(isFortuneRoll(fortuneRoll)).toBe(true);
 
-    const misfortuneRoll = { formula: '2d20kl', terms: [{ faces: 20, number: 2, modifiers: ['kl'] }] };
+    const misfortuneRoll = {
+      formula: '2d20kl',
+      terms: [{ faces: 20, number: 2, modifiers: ['kl'] }],
+    };
     expect(isMisfortuneRoll(misfortuneRoll)).toBe(true);
   });
 });
@@ -330,6 +350,7 @@ Expected: FAIL because `roll-helpers.ts` does not exist yet.
 - [ ] **Step 3: Create `src/core/roll-helpers.ts` and integrate in providers & interceptor**
 
 Create `src/core/roll-helpers.ts`:
+
 ```ts
 export function mapLegacyRollMode(rollMode?: string): string | undefined {
   switch (rollMode) {
@@ -434,17 +455,20 @@ git commit -m "fix: normalize secret roll detection, fortune term check, sub-rol
 ### Task 4: Input Validation in Resolver (M1)
 
 **Files:**
+
 - Modify: `src/ui/pp-dice-resolver.ts:250-307`
 - Modify: `src/core/interceptor.ts:96-113`
 - Test: `tests/resolver.test.ts`, `tests/interceptor.test.ts`
 
 **Interfaces:**
+
 - In resolver submit: if any field is populated, all populated fields must be integers within `1..faces`. If any field is invalid or out of range, show validation error, do not submit silent random dice as physical.
 - In `applyPhysicalResults`: clamp each number to `[1, term.faces]`.
 
 - [ ] **Step 1: Write failing test for input validation and partial entry**
 
 In `tests/resolver.test.ts`:
+
 ```ts
 it('rejects values out of range (greater than faces or <= 0) and does not call submitPhysical', () => {
   const roll = { formula: '1d6', terms: [{ faces: 6, number: 1 }] } as any;
@@ -476,12 +500,14 @@ Expected: FAIL (currently submits 99 or silently falls back to random).
 
 In `src/ui/pp-dice-resolver.ts`:
 On submit:
+
 1. Verify if any value is out of range (`num < 1 || num > term.faces || !Number.isInteger(num)`).
 2. If invalid, highlight the input or show error and `return`.
 3. If partial (some blank while others filled), show error or prevent silent RNG badged as Physical.
 
 In `src/core/interceptor.ts`:
 In `applyPhysicalResults`:
+
 ```ts
 export function applyPhysicalResults(
   diceTerms: FoundryDiceTerm[],
@@ -523,12 +549,14 @@ git commit -m "fix: validate physical dice inputs and clamp values in applyPhysi
 ### Task 5: Proper DSN 3D Animation Skip & `renderChatMessageHTML` (M2, M3)
 
 **Files:**
+
 - Modify: `src/main.ts:59-72`
 - Modify: `src/core/interceptor.ts:80-87`
 - Modify: `src/ui/chat-badge.ts:1-65`
 - Test: `tests/chat-badge.test.ts`, `tests/interceptor.test.ts`
 
 **Interfaces:**
+
 - In `main.ts`: register hook `diceSoNiceMessagePreProcess` to set `interception.willTrigger3DRoll = false` when `animateDSN === false` and message has physical roll.
 - Register hook `preCreateChatMessage` to set `flags['dice-so-nice'].skip = true`.
 - Switch `Hooks.on('renderChatMessage', ...)` to `Hooks.on('renderChatMessageHTML', (message: any, html: HTMLElement) => { renderChatBadge(message, html); })`.
@@ -547,9 +575,12 @@ Run: `npm test`
 - [ ] **Step 3: Implement DSN hooks and renderChatMessageHTML**
 
 Update `src/main.ts`:
+
 ```ts
-  // Register DSN animation suppression hooks
-  Hooks.on('diceSoNiceMessagePreProcess', (messageId: string, interception: { willTrigger3DRoll: boolean }) => {
+// Register DSN animation suppression hooks
+Hooks.on(
+  'diceSoNiceMessagePreProcess',
+  (messageId: string, interception: { willTrigger3DRoll: boolean }) => {
     const game = (globalThis as any).game;
     const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
     if (!animateDSN && interception) {
@@ -558,20 +589,21 @@ Update `src/main.ts`:
         interception.willTrigger3DRoll = false;
       }
     }
-  });
+  }
+);
 
-  Hooks.on('preCreateChatMessage', (message: any) => {
-    const game = (globalThis as any).game;
-    const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
-    if (!animateDSN && message?.rolls?.some((r: any) => r?.options?.[FLAGS.PHYSICAL_ROLL])) {
-      message.updateSource?.({ 'flags.dice-so-nice.skip': true });
-    }
-  });
+Hooks.on('preCreateChatMessage', (message: any) => {
+  const game = (globalThis as any).game;
+  const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
+  if (!animateDSN && message?.rolls?.some((r: any) => r?.options?.[FLAGS.PHYSICAL_ROLL])) {
+    message.updateSource?.({ 'flags.dice-so-nice.skip': true });
+  }
+});
 
-  // Register chat badge renderer with modern Foundry v13/v14 hook
-  Hooks.on('renderChatMessageHTML', (message: any, html: HTMLElement) => {
-    renderChatBadge(message, html);
-  });
+// Register chat badge renderer with modern Foundry v13/v14 hook
+Hooks.on('renderChatMessageHTML', (message: any, html: HTMLElement) => {
+  renderChatBadge(message, html);
+});
 ```
 
 Update `src/ui/chat-badge.ts` to construct DOM nodes (`i` icon element + text node) instead of `innerHTML`.
@@ -593,6 +625,7 @@ git commit -m "fix: use official DSN skip hooks and switch to renderChatMessageH
 ### Task 6: Code Quality & Vite Build Improvements (L2, L3, L4, L5, L6, L8)
 
 **Files:**
+
 - Modify: `vite.config.ts`
 - Modify: `src/main.ts`
 - Modify: `src/ui/controls.ts`
@@ -600,6 +633,7 @@ git commit -m "fix: use official DSN skip hooks and switch to renderChatMessageH
 - Modify: `src/ui/chat-badge.ts`
 
 **Interfaces:**
+
 - In `vite.config.ts`: guard `foundrySyncPlugin` so it runs only during `build` and not during `vitest` (`!process.env.VITEST`). Define `__APP_VERSION__` from `package.json`.
 - In `src/main.ts`: use `__APP_VERSION__` instead of hardcoded `'1.0.9'`. Remove unreachable pre-init keybinding check.
 - In `src/ui/controls.ts`: remove unused `registerControls`. Localize toggle notification.
@@ -609,6 +643,7 @@ git commit -m "fix: use official DSN skip hooks and switch to renderChatMessageH
 - [ ] **Step 1: Update `vite.config.ts` and test that `npm test` does not run foundry sync**
 
 Update `vite.config.ts` with:
+
 ```ts
 const isTest = Boolean(process.env.VITEST);
 ...
@@ -645,10 +680,12 @@ git commit -m "chore: clean up dead code, deduplicate listeners, and guard test 
 ### Task 7: Translation & I18n Cleanup (§6)
 
 **Files:**
+
 - Modify: `lang/en.json`
 - Modify: `lang/fr.json`
 
 **Interfaces:**
+
 - Remove unused keys: `Title`, `DiePrompt`, `DieRange`, `ActorLabel`, `ActionLabel`, `FormulaLabel`, `BypassedSecret`.
 - Ensure `InvalidInput`, `ToggleEnabled`, `ToggleDisabled`, `FallbackRollTitle` exist.
 - Update French strings:
@@ -685,6 +722,7 @@ git commit -m "i18n: polish French tabletop RPG terminology and remove unused ke
 ### Task 8: Privacy Scrubbing & Documentation Alignment (§8, §5)
 
 **Files:**
+
 - Modify: `foundryconfig.json.example`
 - Modify: `docs/DEVELOPMENT.md`
 - Modify: `docs/dev/wsl-windows-workflow.md`
@@ -729,6 +767,7 @@ git commit -m "docs: scrub personal paths, align documentation with v14 reality,
 ### Task 9: CI Workflow Hardening & Release Check (L9, §7)
 
 **Files:**
+
 - Modify: `.github/workflows/ci.yml`
 - Modify: `.github/workflows/release.yml`
 

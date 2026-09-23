@@ -90,7 +90,8 @@ describe('Controls & Keybindings', () => {
 
     registeredHook!(v14Controls);
 
-    const tool = v14Controls.tokens.tools['pp-dice-toggle'] || v14Controls.tokens.tools.ppDiceToggle;
+    const tool =
+      v14Controls.tokens.tools['pp-dice-toggle'] || v14Controls.tokens.tools.ppDiceToggle;
     expect(tool).toBeDefined();
     expect(tool.toggle).toBe(true);
     expect(typeof tool.onChange).toBe('function');
@@ -122,7 +123,7 @@ describe('Controls & Keybindings', () => {
 
     registeredHook!(v12Controls);
 
-    const tool = v12Controls[0].tools.find((t: any) => t.name === 'pp-dice-toggle');
+    const tool = v12Controls[0]?.tools.find((t: any) => t.name === 'pp-dice-toggle');
     expect(tool).toBeDefined();
     expect(tool.toggle).toBe(true);
 
@@ -153,4 +154,3 @@ describe('Controls & Keybindings', () => {
     expect(controls.token.tools[0].name).toBe('pp-dice-toggle');
   });
 });
-

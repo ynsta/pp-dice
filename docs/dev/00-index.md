@@ -2,6 +2,6 @@
 
 Developer-facing environment, setup, and workflow documentation.
 
-| Document | Purpose |
-|----------|---------|
+| Document                                           | Purpose                                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------------------- |
 | [wsl-windows-workflow.md](wsl-windows-workflow.md) | Guide for developing in WSL with live synchronization to Windows Foundry VTT |

@@ -1,0 +1,50 @@
+<div class='pp-dice-dialog-content'>
+  <header class='pp-dice-header'>
+    {{#if actor.img}}
+      <img class='pp-dice-actor-img' src='{{actor.img}}' alt='{{actor.name}}' />
+    {{/if}}
+    <div class='pp-dice-header-text'>
+      <h3 class='pp-dice-title'>{{title}}</h3>
+      <span class='pp-dice-formula'><i class='fa-solid fa-calculator'></i> {{formula}}</span>
+    </div>
+  </header>
+
+  <div class='pp-dice-body'>
+    {{#each groups as |group|}}
+      <div class='pp-dice-group' data-denomination='{{group.denomination}}'>
+        <div class='pp-dice-group-header'>
+          <i class='fa-solid fa-dice-d20'></i>
+          <span>{{group.denomination}} ({{group.count}})</span>
+        </div>
+        <div class='pp-dice-inputs'>
+          {{#each group.dice as |die|}}
+            <div class='pp-dice-input-wrapper'>
+              <input
+                type='number'
+                name='{{die.name}}'
+                class='die-input'
+                min='{{die.min}}'
+                max='{{die.max}}'
+                placeholder='{{die.max}}'
+                required
+                autocomplete='off'
+              />
+              <span class='die-range'>1-{{die.max}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    {{/each}}
+  </div>
+
+  <footer class='pp-dice-footer'>
+    <button type='button' class='btn-digital' title='{{localize "PP_DICE.DigitalRollHint"}}'>
+      <i class='fa-solid fa-dice'></i>
+      {{localize 'PP_DICE.DigitalRoll'}}
+    </button>
+    <button type='submit' class='btn-submit'>
+      <i class='fa-solid fa-check'></i>
+      {{localize 'PP_DICE.Submit'}}
+    </button>
+  </footer>
+</div>

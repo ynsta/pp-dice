@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import fs from 'fs-extra';
+import { resolve } from 'node:path';
+import * as fs from 'node:fs';
 
 function foundrySyncPlugin() {
   return {
@@ -9,12 +9,12 @@ function foundrySyncPlugin() {
       const configPath = resolve(__dirname, 'foundryconfig.json');
       if (fs.existsSync(configPath)) {
         try {
-          const config = fs.readJSONSync(configPath);
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
           if (config.dataPath) {
             const targetDir = resolve(config.dataPath, 'modules', 'pp-dice');
             const distDir = resolve(__dirname, 'dist');
             if (fs.existsSync(distDir)) {
-              await fs.copy(distDir, targetDir, { overwrite: true });
+              fs.cpSync(distDir, targetDir, { recursive: true, force: true });
               console.log(`\x1b[32m[pp-dice]\x1b[0m Synced build to ${targetDir}`);
             }
           }

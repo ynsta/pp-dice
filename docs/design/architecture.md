@@ -1,6 +1,7 @@
 # Architecture: `pp-dice`
 
 ## Overview
+
 `pp-dice` bridges physical tabletop dice rolling with Foundry VTT's automated math engine.
 
 ```

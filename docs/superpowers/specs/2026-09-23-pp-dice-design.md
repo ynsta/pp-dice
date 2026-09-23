@@ -9,22 +9,25 @@
 
 ## 1. Context & Motivation
 
-In an in-person ("physical play") tabletop RPG setup, the Game Master (GM) operates Foundry VTT on their laptop while a secondary display (TV or projector) presents an immersive scene to the players without a HUD (e.g., via *Monk's Common Display*).
+In an in-person ("physical play") tabletop RPG setup, the Game Master (GM) operates Foundry VTT on their laptop while a secondary display (TV or projector) presents an immersive scene to the players without a HUD (e.g., via _Monk's Common Display_).
 
 Players roll real physical dice at the gaming table and write on paper character sheets. The GM operates the Foundry interface on their behalf (selecting tokens, triggering attacks, skill checks, and saving throws).
 
 ### Problem Statement
+
 Standard Foundry VTT generates random digital rolls automatically. When players roll physical dice, the GM must either manually edit chat cards or perform mental arithmetic. Foundry's built-in manual dice fulfillment setting is global—it intercepts every single NPC attack, monster recharge, table roll, and secret check, interrupting the GM with unwanted popups.
 
 ### Solution: `pp-dice`
+
 A lightweight, high-performance Foundry VTT v14 module that intercepts rolls and presents a sleek, keyboard-driven popup **only when a player/party character makes a public roll**.
 
 Key characteristics:
+
 1. **Physical Dice Prompt**: Pops up for public player checks (d20 attacks, skills, saves) and damage rolls, prompting for raw physical dice results. Foundry and PF2e then calculate all modifiers, multiple attack penalties, degrees of success, and critical effects automatically.
 2. **Selective Interception**:
-   * **Player Rolls (Public)** $\rightarrow$ Physical prompt on GM screen.
-   * **GM / NPC Rolls** $\rightarrow$ Standard digital RNG roll (no prompt).
-   * **Secret / Blind Rolls** (e.g., Recall Knowledge, Stealth, Secret Perception) $\rightarrow$ Standard digital RNG roll (no prompt).
+   - **Player Rolls (Public)** $\rightarrow$ Physical prompt on GM screen.
+   - **GM / NPC Rolls** $\rightarrow$ Standard digital RNG roll (no prompt).
+   - **Secret / Blind Rolls** (e.g., Recall Knowledge, Stealth, Secret Perception) $\rightarrow$ Standard digital RNG roll (no prompt).
 3. **Deep PF2e Integration + Generic Compatibility**: Native detection for PF2e Party actors (`game.actors.party`), alliance flags, and secret traits, with a clean fallback for any system using `actor.hasPlayerOwner` / `actor.type === "character"`.
 4. **Fast Tabletop UX**: Autofocused numeric fields, `Enter` to confirm, and `Space` / "Digital Roll" button to instantly roll digital dice if a physical roll is waived.
 
@@ -52,7 +55,9 @@ flowchart TD
 ### 2.1 Subsystems
 
 #### A. Context Manager (`src/core/context-manager.ts`)
+
 Determines the identity and permissions of the entity initiating the roll:
+
 - **PF2e Provider**:
   - Checks if the rolling actor is in `game.actors.party.members`.
   - Checks if `actor.parties.size > 0` or `actor.system.details.alliance === "party"`.
@@ -63,15 +68,17 @@ Determines the identity and permissions of the entity initiating the roll:
   - Inspects `rollMode` (`publicroll` vs `gmroll` / `blindroll`).
 
 #### B. Dice Interception Engine (`src/core/interceptor.ts`)
+
 - Utilizes `libWrapper` with `MIXED` mode to wrap `Roll.prototype._evaluate` or `Roll.identifyFulfillableTerms`.
 - When an eligible player roll is identified, sets the fulfillable method to `pp-dice` manual resolution.
 - Guarantees zero overhead and zero interference for non-player or secret rolls.
 
 #### C. User Interface (`src/ui/pp-dice-resolver.ts`)
+
 - Implemented using Foundry v14's native **`foundry.applications.api.ApplicationV2`** with `HandlebarsApplicationMixin`.
 - Layout:
   - Actor portrait and name.
-  - Action / check name (e.g. *"Valeros — Strike: Longsword"*).
+  - Action / check name (e.g. _"Valeros — Strike: Longsword"_).
   - Dice inputs grouped by denomination (e.g. d20, d6, d8).
   - Supports `kh` / `kl` (keep highest / lowest for fortune/misfortune or advantage/disadvantage): both dice are prompted and Foundry automatically handles the drop.
   - Keyboard shortcuts:
@@ -81,6 +88,7 @@ Determines the identity and permissions of the entity initiating the roll:
     - `Space` (when not in numeric field) or clicking "Roll Digital": Fall back to RNG.
 
 #### D. Quick Session Controls (`src/ui/controls.ts`)
+
 - Header control toggle or hotkey (`Alt+P`) to quickly enable/disable `pp-dice` without going to settings (e.g., if a player forgets dice or wants digital rolling for a turn).
 
 ---
@@ -88,6 +96,7 @@ Determines the identity and permissions of the entity initiating the roll:
 ## 3. Developer Toolchain & Environment
 
 ### 3.1 WSL + Windows Foundry Integration
+
 - **Host**: Windows 11 running Foundry VTT v14 (`Foundry Virtual Tabletop.exe`).
 - **Data Path**: `/mnt/c/Users/stany/AppData/Local/FoundryVTT/Data/modules/pp-dice`.
 - **Dev Environment**: Ubuntu on WSL 2 (`/home/stany/Work/phlay`).
@@ -98,6 +107,7 @@ Determines the identity and permissions of the entity initiating the roll:
   - **Testing**: Vitest with mock Foundry Roll classes for instant local test execution in WSL.
 
 ### 3.2 Standards & Quality Gates (Tier B / Tier C)
+
 - Strict TypeScript (`strict: true`).
 - ESLint (`@typescript-eslint/strict`) with `--max-warnings 0`.
 - Prettier formatting check.

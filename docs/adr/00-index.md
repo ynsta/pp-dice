@@ -2,6 +2,6 @@
 
 Immutable records of significant architectural decisions. Numbered sequentially.
 
-| ADR | Title | Status |
-|-----|-------|--------|
+| ADR                                      | Title                                           | Status   |
+| ---------------------------------------- | ----------------------------------------------- | -------- |
 | [0001](0001-hybrid-roll-interception.md) | Hybrid Roll Interception with Context Providers | Accepted |

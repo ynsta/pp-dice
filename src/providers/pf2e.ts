@@ -62,7 +62,9 @@ export class PF2eContextProvider implements RollContextProvider {
     const game = (globalThis as any).game;
 
     // Check active party members
-    if (game?.actors?.party?.members?.some((m: any) => m?.uuid === actor?.uuid || m?.id === actor?.id)) {
+    if (
+      game?.actors?.party?.members?.some((m: any) => m?.uuid === actor?.uuid || m?.id === actor?.id)
+    ) {
       return true;
     }
 

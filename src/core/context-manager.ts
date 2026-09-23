@@ -31,7 +31,10 @@ export class ContextManager {
     };
   }
 
-  shouldIntercept(roll: any, options: Record<string, any> = {}): {
+  shouldIntercept(
+    roll: any,
+    options: Record<string, any> = {}
+  ): {
     intercept: boolean;
     context: RollEvaluationContext;
   } {

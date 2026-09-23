@@ -12,12 +12,8 @@
       "name": "stany"
     }
   ],
-  "esmodules": [
-    "main.js"
-  ],
-  "styles": [
-    "styles/pp-dice.css"
-  ],
+  "esmodules": ["main.js"],
+  "styles": ["styles/pp-dice.css"],
   "languages": [
     {
       "lang": "en",

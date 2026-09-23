@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.9] - 2026-09-23
 
-### Fixed
+### Added
 
-- Forced vertical column layout for chat card metadata so the physical roll badge always stacks cleanly under the timestamp and delete icon across all systems (including PF2e grid headers).
-- Wrapped existing metadata elements inside a dedicated row container (`.pp-dice-meta-row`) and applied `flex-direction: column !important` with high specificity.
-- Updated documentation screenshot in `docs/images/screenshot00.webp`.
+- Support for empty `Enter` in dice resolver: pressing `Enter` with empty input fields triggers an immediate digital roll.
+- Direct input and frame keydown listener for `Escape` and `R` (`KeyR`), ensuring instant digital roll even when input fields are focused.
+- Canvas pause suppression: `Space` key events inside the resolver dialog are suppressed to avoid pausing Foundry during input.
 
 ### Changed
 
@@ -21,17 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shortened badge copy to compact "Physical" (EN) / "Physique" (FR) alongside the d20 die icon.
 - Modularized chat badge rendering logic into dedicated `chat-badge.ts` with comprehensive unit tests.
 
-### Added
-
-- Support for empty `Enter` in dice resolver: pressing `Enter` with empty input fields triggers an immediate digital roll.
-- Direct input and frame keydown listener for `Escape` and `R` (`KeyR`), ensuring instant digital roll even when input fields are focused.
-- Canvas pause suppression: `Space` key events inside the resolver dialog are suppressed to avoid pausing Foundry during input.
-
 ### Fixed
 
+- Forced vertical column layout for chat card metadata so the physical roll badge always stacks cleanly under the timestamp and delete icon across all systems (including PF2e grid headers).
+- Wrapped existing metadata elements inside a dedicated row container (`.pp-dice-meta-row`) and applied `flex-direction: column !important` with high specificity.
 - Fixed dice modifier evaluation bypass: physical dice terms no longer set `_evaluated = true` prematurely, allowing Foundry's native `_evaluateModifiers()` to process keep/drop (`kh`/`kl`) modifiers correctly.
 - Isolated roll interceptor error boundary: input prompt failures safely fall back to digital rolls, while AST evaluation errors avoid redundant re-execution on mutated term state.
 - Standardized `Alt+P` keybinding registration in `init` hook with core modifier formatting so it is reliably listed and customizable in Foundry's **Configure Controls** menu.
+- Updated documentation screenshot in `docs/images/screenshot00.webp`.
 
 ## [1.0.4] - 2026-09-23
 

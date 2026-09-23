@@ -8,13 +8,13 @@
 
 - Node.js >= 22 (inside WSL)
 - Foundry VTT v14 build 368+ installed on Windows
-- Pathfinder 2e (PF2e) system installed in Foundry
+- Any game system installed in Foundry (system-agnostic; tested on Pathfinder 2e)
 
 ## Setup & Configuration
 
 1. Clone or navigate to the repository in WSL:
    ```bash
-   cd ~/Work/pp-dice
+   cd /path/to/pp-dice
    ```
 2. Install dependencies:
    ```bash
@@ -23,7 +23,7 @@
 3. Verify or adjust `foundryconfig.json`:
    ```json
    {
-     "dataPath": "/mnt/c/Users/stany/AppData/Local/FoundryVTT/Data"
+     "dataPath": "/mnt/c/Users/<your-username>/AppData/Local/FoundryVTT/Data"
    }
    ```
 

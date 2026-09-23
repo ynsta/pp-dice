@@ -15,12 +15,12 @@
     "DigitalRoll": "Jet numérique (Échap / R)",
     "DigitalRollHint": "Échap / R / Entrée à vide = jet numérique",
     "SubmitHint": "Entrée = valider le jet physique",
-    "DieInputHint": "Saisissez le résultat ou laissez vide et appuyez sur Entrée / Échap / R pour lancer virtuel",
-    "KeyboardHint": "Entrée vide / Échap / R = lancer virtuel",
+    "DieInputHint": "Saisissez le résultat ou laissez vide et appuyez sur Entrée / Échap / R pour jet numérique",
+    "KeyboardHint": "Entrée vide / Échap / R = jet numérique",
     "Fortune": "Fortune (garder le meilleur)",
     "Misfortune": "Infortune (garder le pire)",
     "PhysicalBadge": "Dés physiques",
-    "InvalidInput": "Veuillez saisir un résultat valide compris entre 1 et {max}.",
+    "InvalidInput": "Veuillez saisir un résultat de dé valide.",
     "FallbackRollTitle": "Jet"
   }
 }

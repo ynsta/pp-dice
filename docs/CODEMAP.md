@@ -19,17 +19,20 @@ pp-dice/
 │   ├── module.json                # Foundry VTT v14 manifest
 │   ├── core/
 │   │   ├── context-manager.ts     # Resolves actor/party context and determines interception eligibility
-│   │   └── interceptor.ts         # libWrapper hook, sequential roll queue, term value injection
+│   │   ├── interceptor.ts         # libWrapper hook, sequential roll queue, term value injection
+│   │   └── roll-helpers.ts        # Secret roll detection, fortune modifier detection, player token resolution
 │   ├── providers/
 │   │   ├── base.ts                # RollContextProvider interface and RollEvaluationContext
 │   │   ├── pf2e.ts                # PF2e party actor, alliance, secret trait, and fortune detection
 │   │   └── generic.ts             # Fallback provider using actor.hasPlayerOwner and character type
 │   ├── ui/
-│   │   ├── pp-dice-resolver.ts    # ApplicationV2 Handlebars dialog for physical dice input
-│   │   └── controls.ts            # Alt+P keybinding and scene controls toggle tool
+│   │   ├── chat-badge.ts          # Chat message badge DOM injection (renderChatMessageHTML)
+│   │   ├── controls.ts            # Alt+P keybinding and scene controls toggle tool
+│   │   └── pp-dice-resolver.ts    # ApplicationV2 Handlebars dialog for physical dice input
 │   ├── styles/
 │   │   └── pp-dice.css            # Dark theme styles for resolver modal and chat badges
 │   └── types/
+│       ├── env.d.ts               # Vite environment definitions
 │       └── foundry.d.ts           # Type definitions for Foundry Actor, Token, Roll, DiceTerm
 ├── templates/
 │   └── dice-resolver.hbs          # Handlebars template for physical dice input dialog
@@ -37,7 +40,11 @@ pp-dice/
 │   ├── en.json                    # English translations
 │   └── fr.json                    # French translations
 ├── tests/
+│   ├── chat-badge.test.ts         # Tests for chat badge DOM rendering and deduplication
 │   ├── context-manager.test.ts    # Unit tests for party detection and roll filtering
-│   └── interceptor.test.ts        # Unit tests for term extraction, injection, and queueing
+│   ├── controls.test.ts           # Scene controls and keybinding registration tests
+│   ├── interceptor.test.ts        # Unit tests for term extraction, injection, and queueing
+│   ├── resolver.test.ts           # Resolver dialog tests, input validation, and keyboard shortcuts
+│   └── roll-helpers.test.ts       # Unit tests for secret roll and fortune detection helpers
 └── docs/                          # Documentation plane (user-guide, spec, design, adr, dev)
 ```

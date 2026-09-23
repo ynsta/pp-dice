@@ -2,8 +2,8 @@
 
 ## Environment Layout
 
-- **Source Code & Tooling (WSL 2):** `/home/stany/Work/pp-dice`
-- **Foundry Data & Runtime (Windows 11):** `/mnt/c/Users/stany/AppData/Local/FoundryVTT/Data/modules/pp-dice`
+- **Source Code & Tooling (WSL 2):** `/path/to/pp-dice`
+- **Foundry Data & Runtime (Windows 11):** `/mnt/c/Users/<your-username>/AppData/Local/FoundryVTT/Data/modules/pp-dice`
 
 ## Live Synchronization
 

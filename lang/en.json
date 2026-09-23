@@ -20,7 +20,7 @@
     "Fortune": "Fortune (Take Higher)",
     "Misfortune": "Misfortune (Take Lower)",
     "PhysicalBadge": "Physical",
-    "InvalidInput": "Please enter a valid die result between 1 and {max}.",
+    "InvalidInput": "Please enter a valid die result.",
     "FallbackRollTitle": "Roll"
   }
 }

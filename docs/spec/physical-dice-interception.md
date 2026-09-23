@@ -10,16 +10,17 @@ A roll prompts for manual fulfillment if and only if:
 
 1. `pp-dice` is active (not toggled off).
 2. The roll originates from a **Player Character** (Party member or player-owned character).
-3. The roll is **Public** (`publicroll`).
+3. The roll is **Public** (`publicroll` or v14 `messageMode: "public"`).
 
 ## 3. Automatic Bypass Criteria
 
 A roll immediately evaluates via digital RNG without user prompting if:
 
 1. The roll originates from an NPC or GM-owned non-player actor.
-2. The roll is **Secret / Blind** (`blindroll`, `gmroll`, or has the PF2e `secret` trait like Recall Knowledge or Stealth).
+2. The roll is **Secret / Blind** (`blindroll`, `gmroll`, v14 `messageMode` of `gm`, `blind`, or `self`, or has the PF2e `secret` trait like Recall Knowledge or Stealth).
 3. The GM presses `Escape` or `R`, presses `Enter` on an empty input, or clicks "Roll Digital" in the resolver popup (`Space` is suppressed to prevent pausing Foundry).
 4. The user toggles `pp-dice` off via scene controls or shortcut (`Alt+P`).
+5. The roll is an internal sub-roll belonging to a parent roll (`roll._root` is present).
 
 ## 4. Evaluation and Calculation
 
@@ -47,7 +48,7 @@ When multiple rolls trigger near-simultaneously (such as AoE saving throws for s
 ### 5.3 Chat Log Badges & 3D Dice (Dice So Nice)
 
 - Rolls fulfilled with physical dice receive a `FLAGS.PHYSICAL_ROLL` flag.
-- When enabled, a `Physical Roll` badge appears in the chat message header.
+- When enabled, a `Physical` badge (rendered as `Physical` or `Dés physiques`) appears in the chat message header.
 - When `animateDSN` is enabled and Dice So Nice is installed, 3D dice animate and land on the physical numbers entered.
 
 ## 6. Resolver Interaction & Keyboard Controls

@@ -28,7 +28,7 @@ Players roll their physical dice at the table. When the GM triggers an action (a
 ### Requirements
 
 - **Foundry VTT**: Version 14 (Build 14.360+).
-- **Game System**: System-agnostic (supports core Foundry d20 rolls across any system; primarily tested and deeply optimized for Pathfinder 2e).
+- **Game System**: System-agnostic (supports core Foundry rolls across any system; primarily tested and deeply optimized for Pathfinder 2e).
 - **Required Module**: [`lib-wrapper`](https://foundryvtt.com/packages/lib-wrapper) (Foundry will automatically prompt to install/enable it).
 
 ### Installation via Manifest
@@ -104,13 +104,13 @@ When a roll is intercepted, the input dialog opens instantly:
    - **`Space`**: Suppressed inside the dialog to prevent accidental canvas pausing while typing.
    - **`Tab`**: Jump to the next die when multiple dice are rolled (e.g. 2d6 damage).
 3. **Multi-Die Rolls**: Spells and damage rolls with multiple dice provide individual input fields for each die.
-4. **Safety Validation**: Inputs only accept valid numbers for that die type (e.g. 1–20 for a d20, 1–6 for a d6).
+4. **Safety Validation**: Entered values are validated against the die type (e.g. 1–20 for a d20, 1–6 for a d6) upon submission. Invalid inputs are highlighted with an alert, and results are safely clamped to the die's valid range.
 
 ### Fortune & Misfortune (Advantage / Disadvantage)
 
 If a roll has the **Fortune** or **Misfortune** trait (or advantage / disadvantage):
 
-- The dialog displays a badge: `Fortune — Keep Highest` or `Misfortune — Keep Lowest`.
+- The dialog displays a badge: `Fortune (Take Higher)` / `Misfortune (Take Lower)` (or `Fortune (garder le meilleur)` / `Infortune (garder le pire)` in French).
 - Two d20 fields are provided for the player's two physical dice.
 - The system automatically keeps the appropriate die and calculates the outcome via Foundry's native dice modifier evaluation.
 
@@ -124,7 +124,7 @@ When a fireball hits 4 party members, 4 saving throws trigger in sequence:
 
 ### Chat Log Badge
 
-When a roll is completed using physical dice, a discrete **`Physical Roll`** badge appears on the chat card, confirming the roll came from the physical table.
+When a roll is completed using physical dice, a discrete **`Physical`** (or **`Dés physiques`**) badge appears on the chat card, confirming the roll came from the physical table.
 
 ---
 
@@ -132,7 +132,7 @@ When a roll is completed using physical dice, a discrete **`Physical Roll`** bad
 
 - **`Alt+P`**: Default global shortcut to toggle physical interception on or off anytime.
   - **Customizable**: Registered during module initialization (`init`). Go to **Game Settings (gear icon)** $\rightarrow$ **Configure Controls** $\rightarrow$ **Package Keybindings** $\rightarrow$ **Physical Play Dice** to bind this toggle to any preferred key combination.
-- **Token Controls Toolbar**: A dice tool button in the left controls bar allows one-click toggling with live visual status.
+- **Token Controls Toolbar**: A dice tool button in the Token Controls layer (left controls toolbar) allows one-click toggling with live visual status.
 
 ---
 

@@ -1,6 +1,6 @@
 # Physical Play Dice (`pp-dice`) — User Manual & Guide
 
-Welcome to the comprehensive user manual for **Physical Play Dice (`pp-dice`)**, a module built specifically for **in-person tabletop gaming sessions** with Foundry Virtual Tabletop v14.
+Welcome to the user manual for **Physical Play Dice (`pp-dice`)**, a module built specifically for **in-person tabletop gaming sessions** with Foundry Virtual Tabletop v14.
 
 ---
 
@@ -9,13 +9,13 @@ Welcome to the comprehensive user manual for **Physical Play Dice (`pp-dice`)**,
 When playing tabletop RPGs around a physical table, many groups enjoy:
 
 - The tactile sensation of rolling physical dice.
-- Looking at a shared TV, monitor, or projector showing the battlemap without clutter or player HUDs (e.g. using [Monk's Common Display](https://foundryvtt.com/packages/monks-common-display)).
-- Letting the GM operate Foundry VTT on a secondary screen to run combats, measure ranges, and manage initiative.
+- Looking at a shared TV, monitor, or projector showing the battlemap without player HUDs or clutter (e.g. using [Monk's Common Display](https://foundryvtt.com/packages/monks-common-display)).
+- Letting the GM operate Foundry VTT on a secondary screen to run encounters, measure distances, and track conditions.
 
-However, standard Foundry VTT rolls rely on a digital random number generator (RNG). Entering physical rolls manually by modifying character sheets or typing `/r` formulas slows down play and bypasses system automation.
+Normally, clicking an attack or spell in Foundry triggers its digital random dice roller. Manually modifying numbers or typing raw chat formulas breaks game flow and loses system automation.
 
-**`pp-dice` solves this problem with hybrid interception:**
-Players roll their physical dice at the table. When the GM clicks an action (attack, save, skill, damage) on Foundry, `pp-dice` opens a fast, keyboard-first modal asking for the raw dice results. Foundry and Pathfinder 2e then calculate all modifiers, multiple attack penalties, criticals, and degrees of success automatically.
+**`pp-dice` bridges the table and the virtual tabletop:**
+Players roll their physical dice at the table. When the GM triggers an action (attack, save, skill, damage) in Foundry, a lightweight popup asks for the dice results. Foundry and Pathfinder 2e then calculate all modifiers, multiple attack penalties, criticals, and degrees of success automatically.
 
 <p align="center">
   <img src="images/screenshot00.webp" alt="Physical Roll Input Dialog" width="600" />
@@ -27,26 +27,26 @@ Players roll their physical dice at the table. When the GM clicks an action (att
 
 ### Requirements
 
-- **Foundry VTT**: Version 14 (Build 14.360+, verified on 14.368+).
-- **Game System**: Pathfinder 2e (v8.5.1+) or System-Agnostic Core d20 rolls.
-- **Required Library**: [`lib-wrapper`](https://foundryvtt.com/packages/lib-wrapper) (ensures reliable, conflict-free interception of Foundry roll evaluation).
+- **Foundry VTT**: Version 14 (Build 14.360+).
+- **Game System**: Pathfinder 2e or any d20-based system.
+- **Required Module**: [`lib-wrapper`](https://foundryvtt.com/packages/lib-wrapper) (Foundry will automatically prompt to install/enable it).
 
 ### Installation via Manifest
 
-1. In Foundry VTT, go to **Configuration and Setup** $\rightarrow$ **Add-on Modules**.
+1. In Foundry VTT, navigate to **Configuration and Setup** $\rightarrow$ **Add-on Modules**.
 2. Click **Install Module**.
-3. Paste the manifest URL into the **Manifest URL** field:
+3. Paste the manifest link into the **Manifest URL** box:
    ```text
    https://github.com/ynsta/pp-dice/releases/latest/download/module.json
    ```
 4. Click **Install**.
-5. Launch your world and enable **Physical Play Dice** in **Manage Modules**.
+5. In your game world, enable **Physical Play Dice** in **Manage Modules**.
 
 ---
 
 ## 3. Recommended In-Person Setup
 
-For the smoothest in-person gaming experience, pair `pp-dice` with:
+For the best in-person setup:
 
 | Module                                                                            | Purpose                                                                                             |
 | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -57,12 +57,13 @@ For the smoothest in-person gaming experience, pair `pp-dice` with:
 
 ## 4. How It Works
 
-### Smart Player & Party Detection
+### Player Character Detection
 
-`pp-dice` automatically determines whether a roll belongs to a player character:
+The module automatically identifies who is rolling:
 
-- In **Pathfinder 2e**: Checks party membership (`game.actors.party.members`, `actor.parties`, or alliance set to `"party"`).
-- In **Generic/Core**: Checks if the actor has a player owner (`actor.hasPlayerOwner`) or character type.
+- **Pathfinder 2e**: Any character placed in the active Party sheet or allied with the party is treated as a player.
+- **Other systems**: Any actor owned by a player is recognized as a player character.
+- **Monsters & NPCs**: Never intercepted. Enemy rolls evaluate digitally without interruption.
 
 ### Selective Interception Rules
 
@@ -77,7 +78,7 @@ For the smoothest in-person gaming experience, pair `pp-dice` with:
                  │ YES                             │ NO (NPC / Monster)
                  ▼                                 ▼
          Is Secret / Blind?                   Digital Roll
-                 │                           (Core Foundry RNG)
+                 │                           (Standard Core RNG)
          ┌───────┴────────┐
          │ NO             │ YES
          ▼                ▼
@@ -85,66 +86,66 @@ For the smoothest in-person gaming experience, pair `pp-dice` with:
    (Physical Dice)  (Keeps Secret)
 ```
 
-- **Public Player Rolls** (Attacks, Saves, Skills, Perception, Damage) $\rightarrow$ **Intercepted**. The GM dialog pops up to accept the physical dice.
-- **Secret / Blind Rolls** (Recall Knowledge, Stealth, Secret Perception, Sense Motive) $\rightarrow$ **Digital Fallback**. Evaluated via digital RNG so the GM and players do not inadvertently learn secret information.
-- **NPC & Monster Rolls** $\rightarrow$ **Digital Fallback**. The GM never needs to enter numbers for monsters, keeping enemy turns fast.
+- **Public Player Rolls** (Attacks, Saves, Skills, Perception, Damage) $\rightarrow$ **Intercepted**. The GM dialog pops up immediately to enter physical dice.
+- **Secret / Blind Rolls** (Recall Knowledge, Stealth, Secret Perception, Sense Motive) $\rightarrow$ **Digital Roll**. Evaluated with standard digital RNG so neither the GM nor players accidentally reveal secret information.
+- **NPC & Monster Rolls** $\rightarrow$ **Digital Roll**. Enemy turns remain instant and automated.
 
 ---
 
-## 5. Using the Dice Resolver Modal
+## 5. Using the Dice Input Dialog
 
-When a roll is intercepted, the `PPDiceResolver` dialog opens instantly:
+When a roll is intercepted, the input dialog opens instantly:
 
-1. **Autofocus**: The cursor is immediately placed inside the primary die field. You do not need to click with the mouse.
-2. **Key Shortcuts**:
+1. **Immediate Focus**: The cursor is automatically placed in the primary die box. No mouse click needed.
+2. **Keyboard Controls**:
    - **`Enter`**: Submit the entered physical values and complete the roll.
-   - **`Space`** or **Roll Digital**: Instantly abort physical entry and roll digital RNG (convenient if a player forgot to roll or prefers digital).
-   - **`Tab`**: Move between multiple dice inputs (e.g. 2d6 damage).
-3. **Multi-Die Groups**: For multi-die rolls (such as `3d6` fire damage or `2d8` striking weapon), separate input boxes are provided for each die.
-4. **Validation**: Enforces valid face ranges (e.g. 1–20 for a d20, 1–6 for a d6).
+   - **`Space`** or **Roll Digital**: Skip manual input and roll digital dice instantly (useful if a player didn't roll or prefers digital).
+   - **`Tab`**: Jump to the next die when multiple dice are rolled (e.g. 2d6 damage).
+3. **Multi-Die Rolls**: Spells and damage rolls with multiple dice provide individual input fields for each die.
+4. **Safety Validation**: Inputs only accept valid numbers for that die type (e.g. 1–20 for a d20, 1–6 for a d6).
 
-### Fortune & Misfortune
+### Fortune & Misfortune (Advantage / Disadvantage)
 
-If a Pathfinder 2e roll has the **Fortune** or **Misfortune** trait (or 5e advantage/disadvantage):
+If a roll has the **Fortune** or **Misfortune** trait (or advantage / disadvantage):
 
-- The modal displays an amber badge: `Fortune — Keep Highest` or `Misfortune — Keep Lowest`.
+- The dialog displays a badge: `Fortune — Keep Highest` or `Misfortune — Keep Lowest`.
 - Two d20 fields are provided for the player's two physical dice.
-- Foundry/PF2e applies the highest or lowest value according to the game rules.
+- The system automatically keeps the appropriate die and calculates the outcome.
 
-### Area of Effect (AoE) & Sequential Queue
+### Area of Effect (AoE) Spells & Sequential Rolls
 
-When a dragon breathes fire on 4 party members, 4 Reflex saves trigger back-to-back:
+When a fireball hits 4 party members, 4 saving throws trigger in sequence:
 
-- `pp-dice` queues each roll sequentially.
-- As soon as the GM confirms Player 1's physical roll, the dialog transitions to Player 2, then Player 3, etc.
-- No dialog overlapping or lost rolls.
+- `pp-dice` queues each roll in order.
+- As soon as you confirm Player 1's roll, the dialog seamlessly moves to Player 2, then Player 3, etc.
+- No overlapping popups or dropped rolls.
 
-### Chat Log Feedback
+### Chat Log Badge
 
-When a roll is completed using physical input, a discrete **`Physical Roll`** badge is affixed to the chat message header, clearly indicating the result was verified from a physical table roll.
+When a roll is completed using physical dice, a discrete **`Physical Roll`** badge appears on the chat card, confirming the roll came from the physical table.
 
 ---
 
 ## 6. Controls & Hotkeys
 
-- **`Alt+P`**: Global hotkey to quickly enable or disable physical interception on the fly.
-- **Token Scene Controls**: A dedicated dice icon tool button in the left token controls toolbar provides one-click visual toggling with live status indicators.
+- **`Alt+P`**: Global shortcut to toggle physical interception on or off anytime.
+- **Token Controls Toolbar**: A dice tool button in the left controls bar allows one-click toggling with clear visual state.
 
 ---
 
 ## 7. Troubleshooting & FAQ
 
-#### The dialog does not open when my players roll?
+#### The dialog does not open when a player rolls?
 
-1. Ensure the module is enabled in **Manage Modules**.
-2. Check the toggle status via `Alt+P` or the left toolbar button to make sure interception is **Active**.
-3. In PF2e, ensure the player actor is assigned to the active **Party** sheet (`game.actors.party`).
-4. Ensure the roll is not secret/blind (secret rolls always use digital RNG by design).
+1. Verify that **Physical Play Dice** is enabled in **Manage Modules**.
+2. Press `Alt+P` or check the toolbar icon to ensure interception is **Active**.
+3. In Pathfinder 2e, make sure the player character is added to the active **Party** sheet.
+4. Check if the roll was secret or blind (secret rolls deliberately bypass the dialog to avoid spoiling results).
 
-#### What if a player accidentally rolls digital or wants to roll digital?
+#### What if a player wants to roll digitally?
 
-Simply hit `Space` or click **Roll Digital** in the dialog. The module immediately triggers standard core RNG.
+Press `Space` or click **Roll Digital** in the dialog. The module will immediately roll digital dice instead.
 
-#### Does this work with Dice So Nice?
+#### Does 3D dice animation work?
 
-Yes. The 3D dice animation will roll and naturally show the exact numbers you typed into the dialog.
+Yes. If you have **Dice So Nice!** enabled, the 3D dice will roll across the screen and land on the exact physical values you entered.

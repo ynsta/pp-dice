@@ -1,6 +1,6 @@
 import { MODULE_ID, SETTINGS, FLAGS } from './constants';
 import { registerInterception } from './core/interceptor';
-import { registerControls } from './ui/controls';
+import { registerKeybindings, registerSceneControls } from './ui/controls';
 import './styles/pp-dice.css';
 
 const Hooks = (globalThis as any).Hooks;
@@ -43,13 +43,16 @@ Hooks?.once('init', () => {
     default: true,
   });
 
+  // Register keybindings in init so they show up in Configure Controls
+  registerKeybindings();
+
   // Register roll interception
   registerInterception();
 });
 
 Hooks?.once('ready', () => {
-  // Register scene controls & shortcuts
-  registerControls();
+  // Register scene controls button
+  registerSceneControls();
 
   // Register chat badge renderer
   Hooks.on('renderChatMessage', (message: any, html: any) => {

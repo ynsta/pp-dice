@@ -30,13 +30,13 @@ While **system-agnostic** (supporting core Foundry rolls on any d20-based system
 - **Keyboard-First Dialog**:
   - Automatically focuses the primary die input.
   - Press `Enter` to confirm roll.
-  - Press `Space` or click "Roll Digital" for instantaneous fallback to digital RNG.
+  - Press `R` or click "Roll Digital" for instantaneous fallback to digital RNG.
   - Grouped inputs for multi-die damage (e.g., 2d6, 3d8).
 - **Fortune & Misfortune Support**: Shows clear visual badges (`Fortune — Keep Highest` / `Misfortune — Keep Lowest`) and prompts for both d20 dice.
 - **Sequential Queue**: Seamlessly queues rolls when multiple saving throws or actions trigger sequentially (e.g., Area of Effect spells).
 - **Chat Log Badges**: Tags manual rolls with a subtle `Physical Roll` badge in chat.
 - **Dice So Nice Support**: 3D dice land directly on the numbers rolled physically at the table.
-- **Quick Session Toggle**: Press `Alt+P` or use the token control tool to enable/disable interception on the fly.
+- **Quick Session Toggle**: Press `Alt+P` (fully configurable in Foundry's _Configure Controls_) or use the token control tool to enable/disable interception on the fly.
 
 ---
 

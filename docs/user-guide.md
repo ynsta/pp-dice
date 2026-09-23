@@ -99,7 +99,7 @@ When a roll is intercepted, the input dialog opens instantly:
 1. **Immediate Focus**: The cursor is automatically placed in the primary die box. No mouse click needed.
 2. **Keyboard Controls**:
    - **`Enter`**: Submit the entered physical values and complete the roll.
-   - **`Space`** or **Roll Digital**: Skip manual input and roll digital dice instantly (useful if a player didn't roll or prefers digital).
+   - **`R`** or **Roll Digital (R)**: Skip manual input and roll digital dice instantly (convenient if a player didn't roll or prefers digital).
    - **`Tab`**: Jump to the next die when multiple dice are rolled (e.g. 2d6 damage).
 3. **Multi-Die Rolls**: Spells and damage rolls with multiple dice provide individual input fields for each die.
 4. **Safety Validation**: Inputs only accept valid numbers for that die type (e.g. 1–20 for a d20, 1–6 for a d6).
@@ -128,8 +128,9 @@ When a roll is completed using physical dice, a discrete **`Physical Roll`** bad
 
 ## 6. Controls & Hotkeys
 
-- **`Alt+P`**: Global shortcut to toggle physical interception on or off anytime.
-- **Token Controls Toolbar**: A dice tool button in the left controls bar allows one-click toggling with clear visual state.
+- **`Alt+P`**: Default global shortcut to toggle physical interception on or off anytime.
+  - **Customizable**: Go to **Game Settings (gear icon)** $\rightarrow$ **Configure Controls** $\rightarrow$ **Package Keybindings** $\rightarrow$ **Physical Play Dice** to bind this toggle to any preferred key combination.
+- **Token Controls Toolbar**: A dice tool button in the left controls bar allows one-click toggling with live visual status.
 
 ---
 
@@ -144,7 +145,7 @@ When a roll is completed using physical dice, a discrete **`Physical Roll`** bad
 
 #### What if a player wants to roll digitally?
 
-Press `Space` or click **Roll Digital** in the dialog. The module will immediately roll digital dice instead.
+Press **`R`** or click **Roll Digital (R)** in the dialog. The module will immediately roll digital dice instead.
 
 #### Does 3D dice animation work?
 

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-09-23
+
+### Changed
+
+- Replaced `Space` digital roll shortcut with `R` in resolver modal to avoid conflict with Foundry's default game pause keybinding.
+- Blocked `Space` from bubbling to prevent accidental game pauses while entering dice.
+- Registered toggle keybinding in `init` hook so `Alt+P` is fully configurable in Foundry's **Configure Controls** menu.
+- Added live visual re-rendering of the token control tool button on keypress toggle.
+
 ## [1.0.2] - 2026-09-23
 
 ### Changed

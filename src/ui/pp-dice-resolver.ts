@@ -156,10 +156,19 @@ function createResolverAppClass() {
       }
 
       html.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        // Press 'r' or 'R' anywhere (even inside input) to immediately roll digital
+        if (e.key === 'r' || e.key === 'R') {
           e.preventDefault();
+          e.stopPropagation();
           this.resolver.submitDigital();
           this.close();
+          return;
+        }
+
+        // Prevent Space from triggering Foundry global pause while resolver is active
+        if (e.code === 'Space') {
+          e.preventDefault();
+          e.stopPropagation();
         }
       });
 

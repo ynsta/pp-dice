@@ -1,28 +1,34 @@
 import { MODULE_ID, SETTINGS } from '../constants';
 
-export function registerControls(): void {
+export function registerKeybindings(): void {
   const game = (globalThis as any).game;
-  const Hooks = (globalThis as any).Hooks;
 
-  // 1. Keybinding: Alt+P to toggle module on/off
+  // Keybinding: Alt+P (configurable by user in Configure Controls -> Package Keybindings)
   if (game?.keybindings) {
     game.keybindings.register(MODULE_ID, 'toggle', {
       name: 'PP_DICE.ToggleTitle',
-      hint: 'PP_DICE.EnabledHint',
+      hint: 'PP_DICE.ToggleHint',
       editable: [{ key: 'KeyP', modifiers: ['Alt'] }],
+      restricted: true,
+      precedence: (globalThis as any).CONST?.KEYBINDING_PRECEDENCE?.NORMAL,
       onDown: () => {
         toggleEnabled();
         return true;
       },
     });
   }
+}
 
-  // 2. Scene Controls Button
+export function registerSceneControls(): void {
+  const game = (globalThis as any).game;
+  const Hooks = (globalThis as any).Hooks;
+
+  // Scene Controls Button in Token controls
   Hooks?.on('getSceneControlButtons', (controls: any[]) => {
-    const tokenControls = controls.find((c) => c.name === 'token');
+    const tokenControls = controls.find((c: any) => c.name === 'token');
     if (!tokenControls) return;
 
-    const isEnabled = game.settings.get(MODULE_ID, SETTINGS.ENABLED);
+    const isEnabled = game?.settings?.get(MODULE_ID, SETTINGS.ENABLED) ?? true;
 
     tokenControls.tools.push({
       name: 'pp-dice-toggle',
@@ -37,13 +43,20 @@ export function registerControls(): void {
   });
 }
 
+export function registerControls(): void {
+  registerKeybindings();
+  registerSceneControls();
+}
+
 export function toggleEnabled(): boolean {
   const game = (globalThis as any).game;
+  const ui = (globalThis as any).ui;
   const current = game.settings.get(MODULE_ID, SETTINGS.ENABLED);
   const next = !current;
   game.settings.set(MODULE_ID, SETTINGS.ENABLED, next);
 
   const status = next ? 'Enabled' : 'Disabled';
-  (globalThis as any).ui?.notifications?.info(`Physical Play Dice: ${status}`);
+  ui?.notifications?.info(`Physical Play Dice: ${status}`);
+  ui?.controls?.render();
   return next;
 }

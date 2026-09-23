@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-09-23
+
+### Changed
+
+- Declared module system-agnostic in manifest (`relationships.requires` with `lib-wrapper`, removed system restriction).
+- Documented broad system compatibility with primary testing and deep integration on Pathfinder 2e.
+- Added comprehensive user manual in `docs/user-guide.md`.
+
 ## [1.0.1] - 2026-09-23
 
 ### Added

@@ -28,7 +28,7 @@ Players roll their physical dice at the table. When the GM triggers an action (a
 ### Requirements
 
 - **Foundry VTT**: Version 14 (Build 14.360+).
-- **Game System**: Pathfinder 2e or any d20-based system.
+- **Game System**: System-agnostic (supports core Foundry d20 rolls across any system; primarily tested and deeply optimized for Pathfinder 2e).
 - **Required Module**: [`lib-wrapper`](https://foundryvtt.com/packages/lib-wrapper) (Foundry will automatically prompt to install/enable it).
 
 ### Installation via Manifest

@@ -1,12 +1,15 @@
 # Physical Play Dice (`pp-dice`)
 
 [![Foundry VTT v14](https://img.shields.io/badge/Foundry-v14-orange.svg)](https://foundryvtt.com)
-[![PF2e Compatible](https://img.shields.io/badge/PF2e-8.5.1+-blue.svg)](https://github.com/foundryvtt/pf2e)
+[![System Agnostic](https://img.shields.io/badge/System-Agnostic-success.svg)](https://foundryvtt.com)
+[![Optimized for PF2e](https://img.shields.io/badge/Tested%20%26%20Optimized-PF2e-blue.svg)](https://github.com/foundryvtt/pf2e)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 **Physical Play Dice** (`pp-dice`) is a Foundry VTT module built for in-person tabletop gaming sessions.
 
-When playing around a physical table with a projector/TV showing the map to players without a HUD (e.g. using [_Monk's Common Display_](https://foundryvtt.com/packages/monks-common-display)), players roll their real physical dice. The GM triggers actions in Foundry on their behalf. `pp-dice` intercepts public player rolls to prompt for the raw physical dice results, allowing Foundry and Pathfinder 2e to automatically calculate all modifiers, multiple attack penalties, criticals, and degrees of success.
+When playing around a physical table with a projector/TV showing the map to players without a HUD (e.g. using [_Monk's Common Display_](https://foundryvtt.com/packages/monks-common-display)), players roll their real physical dice. The GM triggers actions in Foundry on their behalf. `pp-dice` intercepts public player rolls to prompt for the raw physical dice results, allowing Foundry to automatically calculate all modifiers, multiple attack penalties, criticals, and degrees of success.
+
+While **system-agnostic** (supporting core Foundry rolls on any d20-based system), `pp-dice` is primarily tested on and features deep, dedicated integration for **Pathfinder 2e** (Party sheet detection, Fortune & Misfortune traits, and degree of success automation).
 
 <p align="center">
   <img src="docs/images/screenshot00.webp" alt="Physical Roll Input Dialog" width="600" />

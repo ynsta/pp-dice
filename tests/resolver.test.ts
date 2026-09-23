@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PPDiceResolverApp } from '../src/ui/pp-dice-resolver';
+import { PPDiceResolver, PPDiceResolverApp } from '../src/ui/pp-dice-resolver';
 
 class MockKeyboardEvent {
   defaultPrevented = false;
@@ -114,6 +114,15 @@ class MockElement {
     return results;
   }
 
+  contains(node: any): boolean {
+    let curr = node;
+    while (curr) {
+      if (curr === this) return true;
+      curr = curr.parent;
+    }
+    return false;
+  }
+
   focus() {}
   select() {}
 
@@ -136,7 +145,15 @@ describe('PPDiceResolver & PPDiceResolverApp Keyboard and Submit UX', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    delete (globalThis as any).foundry;
     mockWindowListeners = new Map();
+
+    const mockBody = new MockElement('body');
+    (globalThis as any).document = {
+      body: mockBody,
+      createElement: (tag: string) => new MockElement(tag),
+    };
+    (globalThis as any).KeyboardEvent = MockKeyboardEvent as any;
 
     (globalThis as any).window = {
       addEventListener: (type: string, listener: any, useCapture = false) => {
@@ -222,6 +239,45 @@ describe('PPDiceResolver & PPDiceResolverApp Keyboard and Submit UX', () => {
       expect(event.propagationStopped).toBe(true);
       expect(mockResolver.submitDigital).not.toHaveBeenCalled();
       expect(closeSpy).not.toHaveBeenCalled();
+    });
+
+    it('ignores keydown when target is an outside input like chat (H3)', () => {
+      const roll = { formula: '1d20', terms: [] } as any;
+      const resolver = new PPDiceResolver(roll, {} as any, []);
+      const app = new PPDiceResolverApp(resolver);
+      app.element = { contains: vi.fn(() => false) };
+
+      const submitDigitalSpy = vi.spyOn(resolver, 'submitDigital');
+      const chatInput = document.createElement('input');
+
+      const event = new KeyboardEvent('keydown', { key: 'r', bubbles: true });
+      Object.defineProperty(event, 'target', { value: chatInput });
+
+      app._onKeyDown(event);
+      expect(submitDigitalSpy).not.toHaveBeenCalled();
+    });
+
+    it('processes keydown when target is document.body or null (H3)', () => {
+      const roll = { formula: '1d20', terms: [] } as any;
+      const resolver = new PPDiceResolver(roll, {} as any, []);
+      const app = new PPDiceResolverApp(resolver);
+      app.element = { contains: vi.fn(() => false) };
+      vi.spyOn(app, 'close').mockResolvedValue(undefined as any);
+
+      const submitDigitalSpy = vi.spyOn(resolver, 'submitDigital');
+
+      // target is document.body
+      const eventBody = new MockKeyboardEvent('keydown', {
+        key: 'r',
+        target: (globalThis as any).document.body,
+      });
+      app._onKeyDown(eventBody as unknown as KeyboardEvent);
+      expect(submitDigitalSpy).toHaveBeenCalledTimes(1);
+
+      // target is null
+      const eventNull = new MockKeyboardEvent('keydown', { key: 'Escape', target: null });
+      app._onKeyDown(eventNull as unknown as KeyboardEvent);
+      expect(submitDigitalSpy).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -350,6 +406,50 @@ describe('PPDiceResolver & PPDiceResolverApp Keyboard and Submit UX', () => {
       app._onClose({});
 
       expect(mockWindowListeners.get('keydown')?.length).toBe(0);
+    });
+  });
+
+  describe('PPDiceResolver.renderDialog', () => {
+    it('falls back to submitDigital if app.render rejects asynchronously (H2)', async () => {
+      const roll = { formula: '1d20', terms: [{ faces: 20, number: 1 }] } as any;
+      const context = { title: 'Test' } as any;
+      const resolver = new PPDiceResolver(roll, context, roll.terms);
+
+      (globalThis as any).foundry = {
+        applications: {
+          api: {
+            ApplicationV2: class MockApp {
+              async render() {
+                throw new Error('Async render failure');
+              }
+            },
+          },
+        },
+      };
+
+      const result = await resolver.awaitInput();
+      expect(result.isDigital).toBe(true);
+    });
+
+    it('falls back to submitDigital if app.render throws synchronously', async () => {
+      const roll = { formula: '1d20', terms: [{ faces: 20, number: 1 }] } as any;
+      const context = { title: 'Test' } as any;
+      const resolver = new PPDiceResolver(roll, context, roll.terms);
+
+      (globalThis as any).foundry = {
+        applications: {
+          api: {
+            ApplicationV2: class MockApp {
+              render() {
+                throw new Error('Sync render failure');
+              }
+            },
+          },
+        },
+      };
+
+      const result = await resolver.awaitInput();
+      expect(result.isDigital).toBe(true);
     });
   });
 });

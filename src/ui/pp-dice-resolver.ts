@@ -44,8 +44,19 @@ export class PPDiceResolver {
     const foundryApp = foundryGlobal?.applications;
 
     if (foundryApp?.api?.ApplicationV2) {
-      const app = new PPDiceResolverApp(this);
-      app.render({ force: true });
+      try {
+        const app = new PPDiceResolverApp(this);
+        const renderPromise = app.render({ force: true });
+        if (renderPromise && typeof renderPromise.catch === 'function') {
+          renderPromise.catch((err: unknown) => {
+            console.error(`[${MODULE_ID}] Failed to render resolver dialog:`, err);
+            this.submitDigital();
+          });
+        }
+      } catch (err) {
+        console.error(`[${MODULE_ID}] Error launching resolver dialog:`, err);
+        this.submitDigital();
+      }
     } else {
       // Fallback for headless / test environment
       this.submitDigital();
@@ -161,7 +172,25 @@ export class PPDiceResolverApp extends getBaseApplicationClass() {
     };
   }
 
+  async render(options?: unknown) {
+    const foundryApp = (globalThis as unknown as { foundry?: any }).foundry?.applications?.api
+      ?.ApplicationV2;
+    if (foundryApp?.prototype?.render && !(this instanceof foundryApp)) {
+      return foundryApp.prototype.render.call(this, options);
+    }
+    return super.render(options);
+  }
+
   _onKeyDown(e: KeyboardEvent): void {
+    const target = e.target as HTMLElement | null;
+    const doc = (globalThis as any).document;
+    const isInsideDialog = Boolean(this.element && this.element.contains?.(target));
+    const isBody = target === doc?.body || target === null;
+
+    if (!isInsideDialog && !isBody) {
+      return;
+    }
+
     // Prevent Space from triggering Foundry global pause while resolver is active
     if (e.code === 'Space') {
       e.preventDefault();

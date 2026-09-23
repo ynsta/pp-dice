@@ -156,8 +156,8 @@ function createResolverAppClass() {
       }
 
       html.addEventListener('keydown', (e: KeyboardEvent) => {
-        // Press 'r' or 'R' anywhere (even inside input) to immediately roll digital
-        if (e.key === 'r' || e.key === 'R') {
+        // Press Escape or 'r' / 'R' anywhere (even inside input) to immediately roll digital
+        if (e.key === 'Escape' || e.key === 'r' || e.key === 'R') {
           e.preventDefault();
           e.stopPropagation();
           this.resolver.submitDigital();

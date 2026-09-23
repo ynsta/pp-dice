@@ -99,7 +99,7 @@ When a roll is intercepted, the input dialog opens instantly:
 1. **Immediate Focus**: The cursor is automatically placed in the primary die box. No mouse click needed.
 2. **Keyboard Controls**:
    - **`Enter`**: Submit the entered physical values and complete the roll.
-   - **`R`** or **Roll Digital (R)**: Skip manual input and roll digital dice instantly (convenient if a player didn't roll or prefers digital).
+   - **`Escape`** or **`R`** (or **Roll Digital**): Skip manual input and roll digital dice instantly (convenient if a player didn't roll or prefers digital).
    - **`Tab`**: Jump to the next die when multiple dice are rolled (e.g. 2d6 damage).
 3. **Multi-Die Rolls**: Spells and damage rolls with multiple dice provide individual input fields for each die.
 4. **Safety Validation**: Inputs only accept valid numbers for that die type (e.g. 1–20 for a d20, 1–6 for a d6).
@@ -145,7 +145,7 @@ When a roll is completed using physical dice, a discrete **`Physical Roll`** bad
 
 #### What if a player wants to roll digitally?
 
-Press **`R`** or click **Roll Digital (R)** in the dialog. The module will immediately roll digital dice instead.
+Press **`Escape`** (or **`R`**, or click **Roll Digital**) in the dialog. The module will immediately roll digital dice instead.
 
 #### Does 3D dice animation work?
 

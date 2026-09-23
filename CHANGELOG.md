@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-09-23
+
+### Changed
+
+- Added `Escape` (alongside `R`) as an immediate digital roll trigger inside the resolver modal.
+- Updated digital button label to `Roll Digital (Esc)` (`Lancer virtuel (Échap)`).
+
 ## [1.0.3] - 2026-09-23
 
 ### Changed

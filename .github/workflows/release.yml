@@ -23,11 +23,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify release version matches tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const tag = process.env.TAG || "";
+            const expectedVersion = tag.startsWith("v") ? tag.slice(1) : tag;
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            const mod = JSON.parse(fs.readFileSync("src/module.json", "utf8"));
+
+            console.log(`Release tag: ${tag}`);
+            console.log(`package.json version: ${pkg.version}`);
+            console.log(`src/module.json version: ${mod.version}`);
+
+            if (!expectedVersion) {
+              console.error("Error: Could not determine expected version from tag.");
+              process.exit(1);
+            }
+            if (pkg.version !== expectedVersion) {
+              console.error(`Error: package.json version (${pkg.version}) does not match tag (${tag})`);
+              process.exit(1);
+            }
+            if (mod.version !== expectedVersion) {
+              console.error(`Error: src/module.json version (${mod.version}) does not match tag (${tag})`);
+              process.exit(1);
+            }
+            console.log("Version check passed!");
+          '
+
       - name: Run verification
         run: |
           npm run test
           npm run lint
           npm run typecheck
+          npm run format:check
 
       - name: Build module
         run: npm run build

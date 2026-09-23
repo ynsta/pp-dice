@@ -127,3 +127,21 @@ Document:
 - [ ] **Step 2: Bump version and sync**
 Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
 Verify live sync to `/mnt/c/Users/stany/AppData/Local/FoundryVTT/Data/modules/pp-dice/`.
+
+---
+
+### Task 5: Security & CI Hardening (Codex M6, M7, M8, L6)
+
+**Files:**
+- Modify: `.github/workflows/release.yml`
+- Create: `.github/workflows/ci.yml`
+- Modify: `package.json`
+
+- [ ] **Step 1: Pin GitHub Actions to commit SHAs in `.github/workflows/release.yml`**
+Pin `actions/checkout`, `actions/setup-node`, and `softprops/action-gh-release` with immutable commit SHAs.
+
+- [ ] **Step 2: Add `.github/workflows/ci.yml`**
+Create automated verification workflow triggering on `push` to `main` and `pull_request` (test, lint, typecheck, format check, build).
+
+- [ ] **Step 3: Clean unused dependencies and audit**
+Remove unused `fs-extra` from `package.json`. Run audit checks.

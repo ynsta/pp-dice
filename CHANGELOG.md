@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initial project scaffolding with TypeScript, Vite, Vitest, ESLint, and Prettier.
 - In-person physical play dice roll interception for Foundry VTT v14.
 - PF2e Party actor and alliance detection.

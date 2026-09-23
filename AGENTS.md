@@ -28,6 +28,7 @@ Every agent session in this repo must load + apply these skill packs:
 ### Session start gate
 
 Before any response, clarification, repository inspection, shell command, or file edit:
+
 1. Run `superpowers:using-superpowers` first, then run `caveman` so compression is active for every response.
 2. Use `superpowers:using-superpowers` to decide which additional skills apply, then follow the selected skill workflows.
 3. Check documentation review status (when enabled):
@@ -115,17 +116,18 @@ Dev tasks beyond trivial one-file edits: delegate to subagent. Two rules:
 
 ## Documentation Map
 
-| Zone | Purpose | Read when | Update when |
-|------|---------|-----------|-------------|
-| `docs/dev/` | Developer setup: WSL, Windows Foundry sync, build, test | Setting up dev environment | Developer-facing setup changes |
-| `docs/spec/` | Current-state behaviour specs — testable WHAT | Understanding expected behaviour | Behaviour change (in-place update) |
-| `docs/design/` | Current-state architecture — HOW | Understanding the design | Any architecture change (in-place update) |
-| `docs/adr/` | Immutable architectural decision records | Tracing a decision | Genuine arch decision only (see gate) |
-| `docs/superpowers/` | Transient work area — plans/specs from agent workflows | Not source of truth | Cleared after consolidation |
+| Zone                | Purpose                                                 | Read when                        | Update when                               |
+| ------------------- | ------------------------------------------------------- | -------------------------------- | ----------------------------------------- |
+| `docs/dev/`         | Developer setup: WSL, Windows Foundry sync, build, test | Setting up dev environment       | Developer-facing setup changes            |
+| `docs/spec/`        | Current-state behaviour specs — testable WHAT           | Understanding expected behaviour | Behaviour change (in-place update)        |
+| `docs/design/`      | Current-state architecture — HOW                        | Understanding the design         | Any architecture change (in-place update) |
+| `docs/adr/`         | Immutable architectural decision records                | Tracing a decision               | Genuine arch decision only (see gate)     |
+| `docs/superpowers/` | Transient work area — plans/specs from agent workflows  | Not source of truth              | Cleared after consolidation               |
 
 ### Anti-drift rule
 
-*Current state lives in `spec/` and `design/`; never reconstruct it from ADRs, git history, or `superpowers/`.*
+_Current state lives in `spec/` and `design/`; never reconstruct it from ADRs, git history, or `superpowers/`._
+
 - `docs/spec/` and `docs/design/` document what the system does today. Update in-place.
 - `docs/adr/` is immutable once accepted.
 - `docs/superpowers/` is transient work area.

@@ -8,6 +8,10 @@
 
 When playing around a physical table with a projector/TV showing the map to players without a HUD (e.g. using _Monk's Common Display_), players roll their real physical dice. The GM triggers actions in Foundry on their behalf. `pp-dice` intercepts public player rolls to prompt for the raw physical dice results, allowing Foundry and Pathfinder 2e to automatically calculate all modifiers, multiple attack penalties, criticals, and degrees of success.
 
+<p align="center">
+  <img src="docs/images/screenshot00.webp" alt="Physical Roll Input Dialog" width="600" />
+</p>
+
 ---
 
 ## Features

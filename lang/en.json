@@ -1,6 +1,5 @@
 {
   "PP_DICE": {
-    "Title": "Physical Play Dice",
     "Enabled": "Physical Dice Interception",
     "EnabledHint": "Enable intercepting public player rolls for manual entry of physical dice.",
     "ShowChatBadge": "Show Physical Roll Badge",
@@ -9,6 +8,8 @@
     "AnimateDSNHint": "Show Dice So Nice 3D animation landing on the physical result.",
     "ToggleTitle": "Toggle Physical Play Dice",
     "ToggleHint": "Keybinding to toggle physical dice interception on/off.",
+    "ToggleEnabled": "Physical Play Dice: Enabled",
+    "ToggleDisabled": "Physical Play Dice: Disabled",
     "ResolverTitle": "Physical Roll Input",
     "Submit": "Confirm Roll",
     "DigitalRoll": "Roll Digital (Esc / R)",
@@ -16,15 +17,10 @@
     "SubmitHint": "Confirm physical dice (or press Enter when empty for digital roll)",
     "DieInputHint": "Enter physical roll, or leave empty and press Enter / Esc / R for digital roll",
     "KeyboardHint": "Empty Enter / Esc / R = digital roll",
-    "DiePrompt": "Enter result for",
-    "DieRange": "Between {min} and {max}",
-    "ActorLabel": "Actor",
-    "ActionLabel": "Action / Check",
-    "FormulaLabel": "Formula",
-    "Fortune": "Fortune (Keep Highest)",
-    "Misfortune": "Misfortune (Keep Lowest)",
+    "Fortune": "Fortune (Take Higher)",
+    "Misfortune": "Misfortune (Take Lower)",
     "PhysicalBadge": "Physical",
-    "InvalidInput": "Please enter a valid number for all dice.",
-    "BypassedSecret": "Secret roll bypassed to digital RNG."
+    "InvalidInput": "Please enter a valid die result between 1 and {max}.",
+    "FallbackRollTitle": "Roll"
   }
 }

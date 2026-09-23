@@ -127,7 +127,7 @@ describe('Chat Badge Localization', () => {
   });
 
   it('has concise badge text in fr.json', () => {
-    expect(frJson.PP_DICE.PhysicalBadge).toBe('Physique');
+    expect(frJson.PP_DICE.PhysicalBadge).toBe('Dés physiques');
   });
 });
 

@@ -31,8 +31,26 @@ export function renderChatBadge(message: any, html: any): boolean {
     element.querySelector('.message-header');
   if (!target) return false;
 
+  if (target.classList?.contains?.('pp-dice-metadata')) return true;
   target.classList?.add('pp-dice-metadata');
 
+  // Wrap existing metadata elements (timestamp, delete icon, etc.) in row 1
+  const metaRow = doc.createElement('div');
+  metaRow.className = 'pp-dice-meta-row';
+  const existingChildren = Array.from((target.children as any[]) || []);
+  for (const child of existingChildren) {
+    if (target.removeChild) {
+      try {
+        target.removeChild(child);
+      } catch {
+        // Ignore if child already detached
+      }
+    }
+    metaRow.appendChild(child);
+  }
+  target.appendChild(metaRow);
+
+  // Append badge container in row 2
   const container = doc.createElement('div');
   container.className = 'pp-dice-badge-container';
 

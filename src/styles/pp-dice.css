@@ -194,16 +194,22 @@
   background: #00994d;
 }
 
-.message-header .message-metadata.pp-dice-metadata {
+.chat-message .message-header .message-metadata.pp-dice-metadata {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  row-gap: 2px !important;
+}
+
+.pp-dice-meta-row {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   align-items: center;
-  row-gap: 3px;
+  gap: 5px;
+  white-space: nowrap;
 }
 
 .pp-dice-badge-container {
-  flex-basis: 100%;
   display: flex;
   justify-content: flex-end;
 }
@@ -220,4 +226,5 @@
   border-radius: 4px;
   font-weight: 600;
   line-height: 1.15;
+  white-space: nowrap;
 }

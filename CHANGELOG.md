@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.8] - 2026-09-23
+## [1.0.9] - 2026-09-23
+
+### Fixed
+
+- Forced vertical column layout for chat card metadata so the physical roll badge always stacks cleanly under the timestamp and delete icon across all systems (including PF2e grid headers).
+- Wrapped existing metadata elements inside a dedicated row container (`.pp-dice-meta-row`) and applied `flex-direction: column !important` with high specificity.
+- Updated documentation screenshot in `docs/images/screenshot00.webp`.
 
 ### Changed
 

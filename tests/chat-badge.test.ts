@@ -29,12 +29,37 @@ class MockElement {
     };
   }
 
+  get firstChild(): MockElement | null {
+    return this.children[0] ?? null;
+  }
+
   get lastElementChild(): MockElement | null {
     return this.children[this.children.length - 1] ?? null;
   }
 
+  parentElement: MockElement | null = null;
+
   appendChild(child: MockElement) {
+    if (child.parentElement) {
+      child.parentElement.removeChild(child);
+    }
+    child.parentElement = this;
+    const idx = this.children.indexOf(child);
+    if (idx !== -1) {
+      this.children.splice(idx, 1);
+    }
     this.children.push(child);
+    return child;
+  }
+
+  removeChild(child: MockElement) {
+    const idx = this.children.indexOf(child);
+    if (idx !== -1) {
+      this.children.splice(idx, 1);
+    }
+    if (child.parentElement === this) {
+      child.parentElement = null;
+    }
     return child;
   }
 
@@ -52,8 +77,21 @@ class MockElement {
     if (selector === '.message-metadata') {
       return this.children.find((c) => c.className.includes('message-metadata')) ?? null;
     }
+    if (selector === '.pp-dice-meta-row') {
+      if (this.className.includes('pp-dice-meta-row')) return this;
+      for (const child of this.children) {
+        const found = child.querySelector(selector);
+        if (found) return found;
+      }
+      return null;
+    }
     if (selector === '.pp-dice-badge-container') {
-      return this.children.find((c) => c.className.includes('pp-dice-badge-container')) ?? null;
+      if (this.className.includes('pp-dice-badge-container')) return this;
+      for (const child of this.children) {
+        const found = child.querySelector(selector);
+        if (found) return found;
+      }
+      return null;
     }
     if (selector === '.pp-dice-chat-tag') {
       if (this.className.includes('pp-dice-chat-tag')) return this;
@@ -127,7 +165,7 @@ describe('renderChatBadge', () => {
     expect(html.querySelector('.pp-dice-chat-tag')).toBeNull();
   });
 
-  it('attaches badge container below metadata elements when physical roll', () => {
+  it('attaches badge container below metadata elements in a flex column when physical roll', () => {
     const message = {
       rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
     };
@@ -138,6 +176,8 @@ describe('renderChatBadge', () => {
     meta.classList.add('message-metadata');
     const time = new MockElement('time');
     meta.appendChild(time);
+    const del = new MockElement('a');
+    meta.appendChild(del);
     header.appendChild(meta);
     html.appendChild(header);
 
@@ -147,15 +187,26 @@ describe('renderChatBadge', () => {
     const metadata = header.querySelector('.message-metadata') as MockElement;
     expect(metadata.classList.contains('pp-dice-metadata')).toBe(true);
 
+    // Row 1 should be .pp-dice-meta-row wrapping original elements
+    const metaRow = metadata.querySelector('.pp-dice-meta-row') as MockElement;
+    expect(metaRow).not.toBeNull();
+    expect(metaRow.children).toContain(time);
+    expect(metaRow.children).toContain(del);
+
+    // Row 2 should be .pp-dice-badge-container
     const container = metadata.querySelector('.pp-dice-badge-container') as MockElement;
     expect(container).not.toBeNull();
-    // Container should be appended at the end
     expect(metadata.lastElementChild).toBe(container);
 
     const badge = container.querySelector('.pp-dice-chat-tag') as MockElement;
     expect(badge).not.toBeNull();
     expect(badge.innerHTML).toContain('fa-dice-d20');
     expect(badge.innerHTML).toContain('Physical');
+
+    // Idempotency: second call should not re-wrap or duplicate
+    const secondCall = renderChatBadge(message, html);
+    expect(secondCall).toBe(true);
+    expect(metadata.children.length).toBe(2);
   });
 
   it('works when html is jQuery-like array', () => {

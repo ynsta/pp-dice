@@ -51,6 +51,24 @@ describe('Dice Interceptor Engine', () => {
     ]);
   });
 
+  it('clamps values to [1, term.faces] and floors decimals in applyPhysicalResults (M1)', () => {
+    const d20Term: any = { faces: 20, number: 1, id: 'd20' };
+    const d6Term: any = { faces: 6, number: 3, id: 'd6' };
+
+    const valuesMap = new Map();
+    valuesMap.set(d20Term, [99]);
+    valuesMap.set(d6Term, [-5, 0, 4.8]);
+
+    applyPhysicalResults([d20Term, d6Term], valuesMap);
+
+    expect(d20Term.results).toEqual([{ result: 20, active: true }]);
+    expect(d6Term.results).toEqual([
+      { result: 1, active: true },
+      { result: 1, active: true },
+      { result: 4, active: true },
+    ]);
+  });
+
   it('allows Foundry modifier evaluation for keep-highest (2d20kh) without premature _evaluated flag', async () => {
     vi.spyOn(contextManager, 'shouldIntercept').mockReturnValue({
       intercept: true,

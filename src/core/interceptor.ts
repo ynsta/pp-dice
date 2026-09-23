@@ -109,10 +109,13 @@ export function applyPhysicalResults(
         : (valuesMap as Record<string, number[]>)[term.id ?? term.denomination ?? ''];
 
     if (Array.isArray(values) && values.length > 0) {
-      term.results = values.map((val) => ({
-        result: Number(val),
-        active: true,
-      }));
+      term.results = values.map((val) => {
+        const num = Math.min(Math.max(1, Math.floor(Number(val))), term.faces);
+        return {
+          result: num,
+          active: true,
+        };
+      });
     }
   }
 }

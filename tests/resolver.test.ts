@@ -52,12 +52,23 @@ class MockElement {
   listeners: Map<string, Array<(e: any) => void>> = new Map();
   children: MockElement[] = [];
   parent: MockElement | null = null;
+  classList: {
+    add: (c: string) => void;
+    remove: (c: string) => void;
+    contains: (c: string) => boolean;
+  };
 
   constructor(tagName = 'div', attrs: Record<string, string> = {}) {
     this.tagName = tagName.toLowerCase();
     this.className = attrs.class || '';
     this.value = attrs.value || '';
     this.name = attrs.name || '';
+    const classes = new Set<string>((attrs.class || '').split(/\s+/).filter(Boolean));
+    this.classList = {
+      add: (c: string) => classes.add(c),
+      remove: (c: string) => classes.delete(c),
+      contains: (c: string) => classes.has(c),
+    };
   }
 
   appendChild(child: MockElement) {
@@ -80,7 +91,13 @@ class MockElement {
   }
 
   dispatchEvent(event: any): boolean {
-    if (!event.target) event.target = this;
+    if (!event.target) {
+      try {
+        event.target = this;
+      } catch {
+        Object.defineProperty(event, 'target', { value: this, configurable: true });
+      }
+    }
     const list = this.listeners.get(event.type) || [];
     for (const listener of list) {
       listener(event);
@@ -395,6 +412,112 @@ describe('PPDiceResolver & PPDiceResolverApp Keyboard and Submit UX', () => {
 
       const valuesMap = mockResolver.submitPhysical.mock.calls[0][0];
       expect(valuesMap.get(mockResolver.diceTerms[0])).toEqual([17]);
+    });
+
+    it('rejects values out of range (greater than faces or <= 0) and does not call submitPhysical', () => {
+      const roll = { formula: '1d6', terms: [{ faces: 6, number: 1 }] } as any;
+      const resolver = new PPDiceResolver(roll, {} as any, roll.terms);
+      const app = new PPDiceResolverApp(resolver);
+
+      const form = document.createElement('form') as any;
+      const input = document.createElement('input') as any;
+      input.className = 'die-input';
+      input.name = 'die_0_0';
+      input.value = '99'; // Out of range for d6
+      form.appendChild(input);
+      app.element = form;
+
+      app._onRender({}, {});
+
+      const submitPhysicalSpy = vi.spyOn(resolver, 'submitPhysical');
+      const closeSpy = vi.spyOn(app, 'close');
+      const event = new Event('submit', { cancelable: true });
+      form.dispatchEvent(event);
+
+      expect(submitPhysicalSpy).not.toHaveBeenCalled();
+      expect(closeSpy).not.toHaveBeenCalled();
+      expect(input.classList.contains('invalid')).toBe(true);
+    });
+
+    it('rejects non-integer values and negative/zero values without calling submitPhysical', () => {
+      const roll = { formula: '1d6', terms: [{ faces: 6, number: 1 }] } as any;
+      const resolver = new PPDiceResolver(roll, {} as any, roll.terms);
+      const app = new PPDiceResolverApp(resolver);
+
+      const form = document.createElement('form') as any;
+      const input = document.createElement('input') as any;
+      input.className = 'die-input';
+      input.name = 'die_0_0';
+      input.value = '3.5';
+      form.appendChild(input);
+      app.element = form;
+
+      app._onRender({}, {});
+
+      const submitPhysicalSpy = vi.spyOn(resolver, 'submitPhysical');
+      const closeSpy = vi.spyOn(app, 'close');
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+
+      expect(submitPhysicalSpy).not.toHaveBeenCalled();
+      expect(closeSpy).not.toHaveBeenCalled();
+      expect(input.classList.contains('invalid')).toBe(true);
+    });
+
+    it('rejects partial inputs when some dice are filled and others are blank without calling submitPhysical', () => {
+      const roll = { formula: '2d6', terms: [{ faces: 6, number: 2 }] } as any;
+      const resolver = new PPDiceResolver(roll, {} as any, roll.terms);
+      const app = new PPDiceResolverApp(resolver);
+
+      const form = document.createElement('form') as any;
+      const input1 = document.createElement('input') as any;
+      input1.className = 'die-input';
+      input1.name = 'die_0_0';
+      input1.value = '4';
+      form.appendChild(input1);
+
+      const input2 = document.createElement('input') as any;
+      input2.className = 'die-input';
+      input2.name = 'die_0_1';
+      input2.value = ''; // blank while other is filled
+      form.appendChild(input2);
+
+      app.element = form;
+      app._onRender({}, {});
+
+      const submitPhysicalSpy = vi.spyOn(resolver, 'submitPhysical');
+      const submitDigitalSpy = vi.spyOn(resolver, 'submitDigital');
+      const closeSpy = vi.spyOn(app, 'close');
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+
+      expect(submitPhysicalSpy).not.toHaveBeenCalled();
+      expect(submitDigitalSpy).not.toHaveBeenCalled();
+      expect(closeSpy).not.toHaveBeenCalled();
+      expect(input2.classList.contains('invalid')).toBe(true);
+    });
+
+    it('shows warning notification with PP_DICE.InvalidInput when validation fails', () => {
+      const roll = { formula: '1d6', terms: [{ faces: 6, number: 1 }] } as any;
+      const resolver = new PPDiceResolver(roll, {} as any, roll.terms);
+      const app = new PPDiceResolverApp(resolver);
+
+      const form = document.createElement('form') as any;
+      const input = document.createElement('input') as any;
+      input.className = 'die-input';
+      input.name = 'die_0_0';
+      input.value = '0';
+      form.appendChild(input);
+      app.element = form;
+      app._onRender({}, {});
+
+      const warnSpy = vi.fn();
+      const localizeSpy = vi.fn().mockReturnValue('Invalid input text');
+      (globalThis as any).game = { i18n: { localize: localizeSpy } };
+      (globalThis as any).ui = { notifications: { warn: warnSpy } };
+
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+
+      expect(localizeSpy).toHaveBeenCalledWith('PP_DICE.InvalidInput');
+      expect(warnSpy).toHaveBeenCalledWith('Invalid input text');
     });
 
     it('cleans up window keydown listener on close', () => {

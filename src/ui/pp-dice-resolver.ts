@@ -308,6 +308,8 @@ export class PPDiceResolverApp extends getBaseApplicationClass() {
         return el?.value ?? '';
       };
 
+      let hasError = false;
+      let firstInvalidInput: HTMLInputElement | null = null;
       const valuesMap = new Map<FoundryDiceTerm, number[]>();
 
       for (let tIdx = 0; tIdx < this.resolver.diceTerms.length; tIdx++) {
@@ -317,18 +319,36 @@ export class PPDiceResolverApp extends getBaseApplicationClass() {
         const values: number[] = [];
 
         for (let dIdx = 0; dIdx < count; dIdx++) {
-          const raw = getFieldValue(`die_${tIdx}_${dIdx}`);
+          const inputName = `die_${tIdx}_${dIdx}`;
+          const raw = getFieldValue(inputName);
           const rawStr = raw.trim();
+          const inputEl = html.querySelector?.(`[name="${inputName}"]`) as HTMLInputElement | null;
+
           const num = Number(rawStr);
-          if (rawStr !== '' && !isNaN(num) && num > 0) {
-            values.push(num);
+          if (rawStr === '' || !Number.isInteger(num) || num < 1 || num > term.faces) {
+            hasError = true;
+            inputEl?.classList?.add?.('invalid');
+            if (!firstInvalidInput && inputEl) {
+              firstInvalidInput = inputEl;
+            }
           } else {
-            values.push(
-              term.randomFace ? term.randomFace() : Math.floor(Math.random() * term.faces) + 1
-            );
+            inputEl?.classList?.remove?.('invalid');
+            values.push(num);
           }
         }
         valuesMap.set(term, values);
+      }
+
+      if (hasError) {
+        firstInvalidInput?.focus?.();
+        firstInvalidInput?.select?.();
+        const game = (globalThis as any).game;
+        const ui = (globalThis as any).ui;
+        const message =
+          game?.i18n?.localize?.('PP_DICE.InvalidInput') ??
+          'Please enter a valid number for all dice.';
+        ui?.notifications?.warn?.(message);
+        return;
       }
 
       this.resolver.submitPhysical(valuesMap);

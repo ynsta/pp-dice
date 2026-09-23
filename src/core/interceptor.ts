@@ -33,6 +33,11 @@ export async function interceptRollEvaluation(
   wrapped: (opts?: any) => Promise<any>,
   options: Record<string, any> = {}
 ): Promise<any> {
+  // Skip sub-rolls evaluated as part of a parent roll (M4)
+  if ((roll as any)._root) {
+    return wrapped(options);
+  }
+
   const { intercept, context } = contextManager.shouldIntercept(roll, options);
 
   // If not eligible (e.g. NPC or secret roll), evaluate normally with native RNG

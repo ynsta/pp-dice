@@ -246,4 +246,20 @@ describe('Dice Interceptor Engine', () => {
     expect(mockWrapped).toHaveBeenCalledOnce();
     expect(mockWrapped).toHaveBeenCalledWith({ allowInteractive: false });
   });
+
+  it('bypasses interception when roll is a sub-roll (_root is set) (M4)', async () => {
+    const shouldInterceptSpy = vi.spyOn(contextManager, 'shouldIntercept');
+    const mockWrapped = vi.fn().mockResolvedValue('sub-roll-result');
+    const subRoll: any = {
+      formula: '1d4',
+      terms: [{ faces: 4, number: 1 }],
+      _root: { formula: '(1d4)d6' },
+    };
+
+    const result = await interceptRollEvaluation(subRoll, mockWrapped, { allowInteractive: false });
+
+    expect(result).toBe('sub-roll-result');
+    expect(mockWrapped).toHaveBeenCalledWith({ allowInteractive: false });
+    expect(shouldInterceptSpy).not.toHaveBeenCalled();
+  });
 });

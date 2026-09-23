@@ -1,4 +1,5 @@
 import { RollContextProvider, RollEvaluationContext } from './base';
+import { isSecretRoll, isFortuneRoll, isMisfortuneRoll } from '../core/roll-helpers';
 
 export class PF2eContextProvider implements RollContextProvider {
   name = 'pf2e';
@@ -18,6 +19,10 @@ export class PF2eContextProvider implements RollContextProvider {
     let actor = roll.data?.actor ?? null;
     let token = roll.data?.token ?? null;
 
+    if (!actor && roll.data?.token?.actor) {
+      actor = roll.data.token.actor;
+    }
+
     if (!actor && roll.options?.actor) {
       if (typeof roll.options.actor === 'string') {
         actor = game?.actors?.get(roll.options.actor) ?? null;
@@ -31,8 +36,17 @@ export class PF2eContextProvider implements RollContextProvider {
       actor = (globalThis as any).fromUuidSync?.(uuid) ?? null;
     }
 
-    // Fallback to currently controlled token on canvas
-    if (!actor && canvas?.tokens?.controlled?.length === 1) {
+    const hasExplicitTarget = Boolean(
+      roll.data?.actor ||
+      roll.data?.token ||
+      roll.options?.actor ||
+      roll.options?.origin ||
+      roll.options?.speaker ||
+      options?.speaker
+    );
+
+    // Fallback to currently controlled token on canvas only if roll explicitly targets an actor (M6)
+    if (!actor && hasExplicitTarget && canvas?.tokens?.controlled?.length === 1) {
       token = canvas.tokens.controlled[0];
       actor = token.actor;
     }
@@ -84,12 +98,8 @@ export class PF2eContextProvider implements RollContextProvider {
       return true;
     }
 
-    // Generic owner / character checks
+    // Generic owner checks: require hasPlayerOwner === true (M6: unowned characters are not players)
     if (actor.hasPlayerOwner === true) {
-      return true;
-    }
-
-    if (actor.type === 'character') {
       return true;
     }
 
@@ -97,44 +107,15 @@ export class PF2eContextProvider implements RollContextProvider {
   }
 
   isSecretRoll(roll: any, options: Record<string, any> = {}): boolean {
-    if (options.allowInteractive === false) return true;
-    if (roll.options?.isPrivate === true) return true;
-
-    const mode = roll.options?.messageMode ?? roll.options?.rollMode;
-    if (mode === 'blind' || mode === 'blindroll' || mode === 'gm' || mode === 'gmroll') {
-      return true;
-    }
-
-    // Check domains or traits for 'secret'
-    const domains = roll.options?.domains;
-    if (Array.isArray(domains) && domains.includes('secret')) {
-      return true;
-    }
-
-    const traits = roll.options?.traits;
-    if (Array.isArray(traits) && traits.includes('secret')) {
-      return true;
-    }
-
-    return false;
+    return isSecretRoll(roll, options);
   }
 
   detectFortune(roll: any): boolean {
-    if (roll.options?.rollTwice === 'keep-higher') return true;
-    if (roll.formula && typeof roll.formula === 'string' && roll.formula.includes('kh'))
-      return true;
-    const domains = roll.options?.domains;
-    if (Array.isArray(domains) && domains.includes('fortune')) return true;
-    return false;
+    return isFortuneRoll(roll);
   }
 
   detectMisfortune(roll: any): boolean {
-    if (roll.options?.rollTwice === 'keep-lower') return true;
-    if (roll.formula && typeof roll.formula === 'string' && roll.formula.includes('kl'))
-      return true;
-    const domains = roll.options?.domains;
-    if (Array.isArray(domains) && domains.includes('misfortune')) return true;
-    return false;
+    return isMisfortuneRoll(roll);
   }
 
   private resolveTitle(roll: any, actor: any): string {

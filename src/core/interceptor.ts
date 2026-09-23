@@ -1,4 +1,4 @@
-import { MODULE_ID, FLAGS, SETTINGS } from '../constants';
+import { MODULE_ID, FLAGS } from '../constants';
 import { contextManager } from './context-manager';
 import { PPDiceResolver, ResolutionResult } from '../ui/pp-dice-resolver';
 import { FoundryDiceTerm, FoundryRoll } from '../types/foundry';
@@ -81,14 +81,6 @@ export async function interceptRollEvaluation(
     // Tag roll as physical
     roll.options = roll.options || {};
     roll.options[FLAGS.PHYSICAL_ROLL] = true;
-
-    // Check DSN 3D dice animation setting
-    const game = (globalThis as any).game;
-    const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
-    if (!animateDSN) {
-      options.skip3d = true;
-      (roll as any).ghost = true;
-    }
 
     // Call wrapped with allowInteractive: false so core resolver doesn't trigger,
     // and AST evaluation computes the final total and modifiers

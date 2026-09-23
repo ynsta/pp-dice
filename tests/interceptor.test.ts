@@ -6,7 +6,7 @@ import {
 } from '../src/core/interceptor';
 import { contextManager } from '../src/core/context-manager';
 import { PPDiceResolver } from '../src/ui/pp-dice-resolver';
-import { FLAGS } from '../src/constants';
+import { FLAGS, MODULE_ID, SETTINGS } from '../src/constants';
 
 describe('Dice Interceptor Engine', () => {
   beforeEach(() => {
@@ -279,5 +279,41 @@ describe('Dice Interceptor Engine', () => {
     expect(result).toBe('sub-roll-result');
     expect(mockWrapped).toHaveBeenCalledWith({ allowInteractive: false });
     expect(shouldInterceptSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not mutate options.skip3d or roll.ghost during physical roll evaluation (M2)', async () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn((moduleId: string, setting: string) => {
+          if (moduleId === MODULE_ID && setting === SETTINGS.ANIMATE_DSN) return false;
+          return undefined;
+        }),
+      },
+    };
+
+    vi.spyOn(contextManager, 'shouldIntercept').mockReturnValue({
+      intercept: true,
+      context: { isPlayer: true, isSecret: false, title: 'Strike' },
+    });
+
+    const d20Term: any = { faces: 20, number: 1 };
+    const mockRoll: any = { formula: '1d20+4', terms: [d20Term], options: {} };
+    const valuesMap = new Map();
+    valuesMap.set(d20Term, [19]);
+
+    vi.spyOn(PPDiceResolver.prototype, 'awaitInput').mockResolvedValue({
+      isDigital: false,
+      values: valuesMap,
+    });
+
+    const options: Record<string, any> = { customOpt: true };
+    const mockWrapped = vi.fn().mockImplementation(async () => {
+      return { total: 23, evaluated: true };
+    });
+
+    await interceptRollEvaluation(mockRoll, mockWrapped, options);
+
+    expect(options.skip3d).toBeUndefined();
+    expect((mockRoll as any).ghost).toBeUndefined();
   });
 });

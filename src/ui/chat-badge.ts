@@ -1,14 +1,14 @@
-import { FLAGS, MODULE_ID, SETTINGS } from '../constants.js';
+import { FLAGS, MODULE_ID, SETTINGS } from '../constants';
 
 /**
  * Attaches the physical roll badge to a chat message HTML element if the roll
  * was completed using physical dice.
  *
  * @param message The ChatMessage document or roll data object
- * @param html The HTML container or jQuery array from renderChatMessage
+ * @param html The HTMLElement container from renderChatMessageHTML
  * @returns boolean indicating whether the badge was attached
  */
-export function renderChatBadge(message: any, html: any): boolean {
+export function renderChatBadge(message: any, html: HTMLElement | any): boolean {
   const game = (globalThis as any).game;
   const doc = (globalThis as any).document;
   if (!doc) return false;
@@ -56,7 +56,15 @@ export function renderChatBadge(message: any, html: any): boolean {
 
   const badge = doc.createElement('span');
   badge.className = 'pp-dice-chat-tag';
-  badge.innerHTML = `<i class="fa-solid fa-dice-d20"></i> ${game?.i18n?.localize('PP_DICE.PhysicalBadge') ?? 'Physical'}`;
+
+  const icon = doc.createElement('i');
+  icon.className = 'fa-solid fa-dice-d20';
+  badge.appendChild(icon);
+
+  const badgeText = ` ${game?.i18n?.localize('PP_DICE.PhysicalBadge') ?? 'Physical'}`;
+  const textNode = doc.createTextNode ? doc.createTextNode(badgeText) : doc.createElement('span');
+  textNode.textContent = badgeText;
+  badge.appendChild(textNode);
 
   container.appendChild(badge);
   target.appendChild(container);

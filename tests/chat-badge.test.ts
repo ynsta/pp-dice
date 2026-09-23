@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderChatBadge } from '../src/ui/chat-badge.js';
-import { FLAGS, MODULE_ID, SETTINGS } from '../src/constants.js';
+import { renderChatBadge } from '../src/ui/chat-badge';
+import { FLAGS, MODULE_ID, SETTINGS } from '../src/constants';
+import { onDiceSoNiceMessagePreProcess, onPreCreateChatMessage } from '../src/main';
 import enJson from '../lang/en.json';
 import frJson from '../lang/fr.json';
 
@@ -8,7 +9,14 @@ class MockElement {
   tagName: string;
   className = '';
   innerHTML = '';
-  textContent = '';
+  private _textContent = '';
+  get textContent(): string {
+    if (this._textContent) return this._textContent;
+    return this.children.map((c) => c.textContent).join('');
+  }
+  set textContent(val: string) {
+    this._textContent = val;
+  }
   children: MockElement[] = [];
   classList: {
     classes: Set<string>;
@@ -64,6 +72,14 @@ class MockElement {
   }
 
   querySelector(selector: string): MockElement | null {
+    if (selector === 'i') {
+      if (this.tagName === 'i') return this;
+      for (const child of this.children) {
+        const found = child.querySelector(selector);
+        if (found) return found;
+      }
+      return null;
+    }
     if (selector.includes('.message-header .message-metadata')) {
       const header = this.children.find((c) => c.className.includes('message-header'));
       if (header) {
@@ -119,6 +135,11 @@ describe('renderChatBadge', () => {
   beforeEach(() => {
     (globalThis as any).document = {
       createElement: (tagName: string) => new MockElement(tagName),
+      createTextNode: (text: string) => {
+        const el = new MockElement('#text');
+        el.textContent = text;
+        return el;
+      },
     };
     (globalThis as any).game = {
       settings: {
@@ -200,13 +221,40 @@ describe('renderChatBadge', () => {
 
     const badge = container.querySelector('.pp-dice-chat-tag') as MockElement;
     expect(badge).not.toBeNull();
-    expect(badge.innerHTML).toContain('fa-dice-d20');
-    expect(badge.innerHTML).toContain('Physical');
+    const icon = badge.querySelector('i');
+    expect(icon).not.toBeNull();
+    expect(icon?.className).toBe('fa-solid fa-dice-d20');
+    expect(badge.textContent).toContain('Physical');
+    expect(badge.innerHTML).toBe('');
 
     // Idempotency: second call should not re-wrap or duplicate
     const secondCall = renderChatBadge(message, html);
     expect(secondCall).toBe(true);
     expect(metadata.children.length).toBe(2);
+  });
+
+  it('accepts plain HTMLElement directly and constructs DOM nodes with textContent (M3, L5)', () => {
+    const message = {
+      rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
+    };
+    const html = new MockElement('li');
+    const header = new MockElement('header');
+    header.classList.add('message-header');
+    const meta = new MockElement('span');
+    meta.classList.add('message-metadata');
+    header.appendChild(meta);
+    html.appendChild(header);
+
+    const result = renderChatBadge(message, html as unknown as HTMLElement);
+    expect(result).toBe(true);
+
+    const badge = html.querySelector('.pp-dice-chat-tag') as MockElement;
+    expect(badge).not.toBeNull();
+    const icon = badge.querySelector('i');
+    expect(icon).not.toBeNull();
+    expect(icon?.className).toBe('fa-solid fa-dice-d20');
+    expect(badge.textContent).toContain('Physical');
+    expect(badge.innerHTML).toBe('');
   });
 
   it('works when html is jQuery-like array', () => {
@@ -225,5 +273,115 @@ describe('renderChatBadge', () => {
     const result = renderChatBadge(message, jq);
     expect(result).toBe(true);
     expect(root.querySelector('.pp-dice-chat-tag')).not.toBeNull();
+  });
+});
+
+describe('Dice So Nice 3D Animation Skip Hooks (M2)', () => {
+  it('diceSoNiceMessagePreProcess suppresses 3D roll when animateDSN is false and message has physical rolls', () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn((moduleId: string, setting: string) => {
+          if (moduleId === MODULE_ID && setting === SETTINGS.ANIMATE_DSN) return false;
+          return undefined;
+        }),
+      },
+      messages: {
+        get: vi.fn((id: string) => {
+          if (id === 'msg-1') {
+            return {
+              rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
+            };
+          }
+          return null;
+        }),
+      },
+    };
+
+    const interception = { willTrigger3DRoll: true };
+    onDiceSoNiceMessagePreProcess('msg-1', interception);
+    expect(interception.willTrigger3DRoll).toBe(false);
+  });
+
+  it('diceSoNiceMessagePreProcess does not suppress 3D roll when animateDSN is true', () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn(() => true),
+      },
+      messages: {
+        get: vi.fn(() => ({
+          rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
+        })),
+      },
+    };
+
+    const interception = { willTrigger3DRoll: true };
+    onDiceSoNiceMessagePreProcess('msg-1', interception);
+    expect(interception.willTrigger3DRoll).toBe(true);
+  });
+
+  it('diceSoNiceMessagePreProcess does not suppress 3D roll when message has no physical rolls', () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn(() => false),
+      },
+      messages: {
+        get: vi.fn(() => ({
+          rolls: [{ options: {} }],
+        })),
+      },
+    };
+
+    const interception = { willTrigger3DRoll: true };
+    onDiceSoNiceMessagePreProcess('msg-1', interception);
+    expect(interception.willTrigger3DRoll).toBe(true);
+  });
+
+  it('preCreateChatMessage sets flags.dice-so-nice.skip when animateDSN is false and physical roll', () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn(() => false),
+      },
+    };
+
+    const updateSourceSpy = vi.fn();
+    const message = {
+      rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
+      updateSource: updateSourceSpy,
+    };
+
+    onPreCreateChatMessage(message);
+    expect(updateSourceSpy).toHaveBeenCalledWith({ 'flags.dice-so-nice.skip': true });
+  });
+
+  it('preCreateChatMessage sets message.flags fallback when updateSource is absent', () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn(() => false),
+      },
+    };
+
+    const message: any = {
+      rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
+    };
+
+    onPreCreateChatMessage(message);
+    expect(message.flags?.['dice-so-nice']?.skip).toBe(true);
+  });
+
+  it('preCreateChatMessage does not set skip flag when animateDSN is true', () => {
+    (globalThis as any).game = {
+      settings: {
+        get: vi.fn(() => true),
+      },
+    };
+
+    const updateSourceSpy = vi.fn();
+    const message = {
+      rolls: [{ options: { [FLAGS.PHYSICAL_ROLL]: true } }],
+      updateSource: updateSourceSpy,
+    };
+
+    onPreCreateChatMessage(message);
+    expect(updateSourceSpy).not.toHaveBeenCalled();
   });
 });

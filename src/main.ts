@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS } from './constants';
+import { FLAGS, MODULE_ID, SETTINGS } from './constants';
 import { registerInterception } from './core/interceptor';
 import { registerKeybindings, registerSceneControls } from './ui/controls';
 import { renderChatBadge } from './ui/chat-badge';
@@ -56,12 +56,44 @@ if ((globalThis as any).game?.keybindings && !(globalThis as any).game?.keybindi
   registerKeybindings();
 }
 
+export function onDiceSoNiceMessagePreProcess(
+  messageId: string,
+  interception: { willTrigger3DRoll: boolean }
+): void {
+  const game = (globalThis as any).game;
+  const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
+  if (!animateDSN && interception) {
+    const msg = game?.messages?.get?.(messageId);
+    if (msg?.rolls?.some((r: any) => r?.options?.[FLAGS.PHYSICAL_ROLL])) {
+      interception.willTrigger3DRoll = false;
+    }
+  }
+}
+
+export function onPreCreateChatMessage(message: any): void {
+  const game = (globalThis as any).game;
+  const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
+  if (!animateDSN && message?.rolls?.some((r: any) => r?.options?.[FLAGS.PHYSICAL_ROLL])) {
+    if (typeof message.updateSource === 'function') {
+      message.updateSource({ 'flags.dice-so-nice.skip': true });
+    } else {
+      message.flags = message.flags || {};
+      message.flags['dice-so-nice'] = message.flags['dice-so-nice'] || {};
+      message.flags['dice-so-nice'].skip = true;
+    }
+  }
+}
+
 Hooks?.once('ready', () => {
   // Register scene controls button
   registerSceneControls();
 
-  // Register chat badge renderer
-  Hooks.on('renderChatMessage', (message: any, html: any) => {
+  // Register DSN animation suppression hooks
+  Hooks.on('diceSoNiceMessagePreProcess', onDiceSoNiceMessagePreProcess);
+  Hooks.on('preCreateChatMessage', onPreCreateChatMessage);
+
+  // Register chat badge renderer with modern Foundry v13/v14 hook
+  Hooks.on('renderChatMessageHTML', (message: any, html: HTMLElement) => {
     renderChatBadge(message, html);
   });
 

@@ -1,0 +1,153 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ContextManager } from '../src/core/context-manager';
+import { PF2eContextProvider } from '../src/providers/pf2e';
+import { GenericContextProvider } from '../src/providers/generic';
+import { MODULE_ID, SETTINGS } from '../src/constants';
+
+describe('ContextManager & Providers', () => {
+  let contextManager: ContextManager;
+  let mockGame: any;
+
+  beforeEach(() => {
+    mockGame = {
+      system: { id: 'pf2e' },
+      actors: {
+        party: {
+          members: [{ uuid: 'Actor.valeros', id: 'valeros' }],
+        },
+        get: (id: string) => (id === 'valeros' ? { id: 'valeros', name: 'Valeros' } : null),
+      },
+      settings: {
+        get: (module: string, setting: string) => {
+          if (module === MODULE_ID && setting === SETTINGS.ENABLED) return true;
+          return null;
+        },
+      },
+    };
+    (globalThis as any).game = mockGame;
+    (globalThis as any).canvas = { tokens: { controlled: [] } };
+
+    contextManager = new ContextManager();
+  });
+
+  it('correctly identifies party member actor in PF2e', () => {
+    const provider = new PF2eContextProvider();
+    const actorInParty = {
+      uuid: 'Actor.valeros',
+      id: 'valeros',
+      name: 'Valeros',
+      parties: new Set(),
+      hasPlayerOwner: false, // Even if GM account owns it without player user!
+    };
+
+    expect(provider.isPlayerActor(actorInParty)).toBe(true);
+  });
+
+  it('correctly identifies actor with alliance === "party" in PF2e', () => {
+    const provider = new PF2eContextProvider();
+    const actorWithAlliance = {
+      uuid: 'Actor.custom',
+      id: 'custom',
+      name: 'Custom PC',
+      system: { details: { alliance: 'party' } },
+      parties: new Set(),
+    };
+
+    expect(provider.isPlayerActor(actorWithAlliance)).toBe(true);
+  });
+
+  it('does not identify NPC monster as player', () => {
+    const provider = new PF2eContextProvider();
+    const monsterActor = {
+      uuid: 'Actor.goblin',
+      id: 'goblin',
+      name: 'Goblin Warrior',
+      type: 'npc',
+      hasPlayerOwner: false,
+      system: { details: { alliance: 'opposition' } },
+      parties: new Set(),
+    };
+
+    expect(provider.isPlayerActor(monsterActor)).toBe(false);
+  });
+
+  it('identifies secret rolls accurately', () => {
+    const provider = new PF2eContextProvider();
+
+    const publicRoll = { options: { domains: ['attack-roll'] } };
+    expect(provider.isSecretRoll(publicRoll)).toBe(false);
+
+    const secretTraitRoll = { options: { traits: ['secret', 'exploration'] } };
+    expect(provider.isSecretRoll(secretTraitRoll)).toBe(true);
+
+    const blindMessageRoll = { options: { messageMode: 'blind' } };
+    expect(provider.isSecretRoll(blindMessageRoll)).toBe(true);
+
+    const nonInteractiveRoll = { options: {} };
+    expect(provider.isSecretRoll(nonInteractiveRoll, { allowInteractive: false })).toBe(true);
+  });
+
+  it('shouldIntercept returns true only for public player rolls', () => {
+    const playerRoll = {
+      data: {
+        actor: {
+          uuid: 'Actor.valeros',
+          id: 'valeros',
+          name: 'Valeros',
+        },
+      },
+      options: {
+        action: 'strike',
+      },
+    };
+
+    const result = contextManager.shouldIntercept(playerRoll);
+    expect(result.intercept).toBe(true);
+    expect(result.context.isPlayer).toBe(true);
+    expect(result.context.isSecret).toBe(false);
+
+    // Secret roll test
+    const secretPlayerRoll = {
+      ...playerRoll,
+      options: {
+        action: 'recall-knowledge',
+        domains: ['secret'],
+      },
+    };
+    const secretResult = contextManager.shouldIntercept(secretPlayerRoll);
+    expect(secretResult.intercept).toBe(false);
+    expect(secretResult.context.isSecret).toBe(true);
+
+    // NPC roll test
+    const npcRoll = {
+      data: {
+        actor: {
+          uuid: 'Actor.dragon',
+          id: 'dragon',
+          name: 'Red Dragon',
+          type: 'npc',
+          hasPlayerOwner: false,
+        },
+      },
+      options: {},
+    };
+    const npcResult = contextManager.shouldIntercept(npcRoll);
+    expect(npcResult.intercept).toBe(false);
+    expect(npcResult.context.isPlayer).toBe(false);
+  });
+
+  it('generic provider falls back correctly when not in PF2e', () => {
+    mockGame.system.id = 'dnd5e';
+    const generic = new GenericContextProvider();
+
+    const pc = { hasPlayerOwner: true, name: 'Fighter' };
+    const pcRoll = { data: { actor: pc }, options: { rollMode: 'publicroll' } };
+    const ctx = generic.resolveContext(pcRoll);
+    expect(ctx.isPlayer).toBe(true);
+    expect(ctx.isSecret).toBe(false);
+
+    const gmRoll = { data: { actor: pc }, options: { rollMode: 'gmroll' } };
+    const gmCtx = generic.resolveContext(gmRoll);
+    expect(gmCtx.isSecret).toBe(true);
+  });
+});

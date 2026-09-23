@@ -1,0 +1,44 @@
+{
+  "id": "pp-dice",
+  "title": "Physical Play Dice",
+  "description": "Intercepts public player rolls for in-person tabletop gaming, allowing GM input of raw physical dice while calculating all system modifiers automatically.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "14.360",
+    "verified": "14.368"
+  },
+  "authors": [
+    {
+      "name": "stany"
+    }
+  ],
+  "esmodules": [
+    "main.js"
+  ],
+  "styles": [
+    "styles/pp-dice.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "lang/fr.json"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "8.0.0"
+        }
+      }
+    ]
+  }
+}

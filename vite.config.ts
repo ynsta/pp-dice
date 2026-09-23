@@ -13,8 +13,10 @@ function foundrySyncPlugin() {
           if (config.dataPath) {
             const targetDir = resolve(config.dataPath, 'modules', 'pp-dice');
             const distDir = resolve(__dirname, 'dist');
-            await fs.copy(distDir, targetDir, { overwrite: true });
-            console.log(`\x1b[32m[pp-dice]\x1b[0m Synced build to ${targetDir}`);
+            if (fs.existsSync(distDir)) {
+              await fs.copy(distDir, targetDir, { overwrite: true });
+              console.log(`\x1b[32m[pp-dice]\x1b[0m Synced build to ${targetDir}`);
+            }
           }
         } catch (err) {
           console.error('[pp-dice] Failed to sync to Foundry Data:', err);

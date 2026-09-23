@@ -1,0 +1,19 @@
+{
+  "PP_DICE": {
+    "Title": "Physical Play Dice",
+    "Enabled": "Interception des dés physiques",
+    "EnabledHint": "Active l'interception des lancers publics des joueurs pour la saisie manuelle des dés physiques.",
+    "ToggleTitle": "Basculer Physical Play Dice",
+    "ResolverTitle": "Saisie du dé physique",
+    "Submit": "Confirmer le jet",
+    "DigitalRoll": "Lancer virtuel",
+    "DigitalRollHint": "Appuyez sur Espace ou cliquez pour lancer virtuellement",
+    "DiePrompt": "Saisir le résultat pour",
+    "DieRange": "Entre {min} et {max}",
+    "ActorLabel": "Personnage",
+    "ActionLabel": "Action / Test",
+    "FormulaLabel": "Formule",
+    "InvalidInput": "Veuillez saisir un nombre valide pour chaque dé.",
+    "BypassedSecret": "Jet secret exécuté automatiquement par le générateur virtuel."
+  }
+}

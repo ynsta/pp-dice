@@ -3,6 +3,10 @@
     "Title": "Physical Play Dice",
     "Enabled": "Physical Dice Interception",
     "EnabledHint": "Enable intercepting public player rolls for manual entry of physical dice.",
+    "ShowChatBadge": "Show Physical Roll Badge",
+    "ShowChatBadgeHint": "Display a 'Physical' badge on chat cards when a roll was entered manually.",
+    "AnimateDSN": "Animate 3D Dice",
+    "AnimateDSNHint": "Show Dice So Nice 3D animation landing on the physical result.",
     "ToggleTitle": "Toggle Physical Play Dice",
     "ResolverTitle": "Physical Roll Input",
     "Submit": "Confirm Roll",
@@ -13,6 +17,9 @@
     "ActorLabel": "Actor",
     "ActionLabel": "Action / Check",
     "FormulaLabel": "Formula",
+    "Fortune": "Fortune (Keep Highest)",
+    "Misfortune": "Misfortune (Keep Lowest)",
+    "PhysicalBadge": "Physical Roll",
     "InvalidInput": "Please enter a valid number for all dice.",
     "BypassedSecret": "Secret roll bypassed to digital RNG."
   }

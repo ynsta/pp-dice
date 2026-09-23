@@ -1,16 +1,13 @@
-import { MODULE_ID } from '../constants';
+import { MODULE_ID, FLAGS, SETTINGS } from '../constants';
 import { contextManager } from './context-manager';
 import { PPDiceResolver } from '../ui/pp-dice-resolver';
+import { FoundryDiceTerm, FoundryRoll } from '../types/foundry';
 
-export interface DiceTermToFulfill {
-  term: any;
-  denomination: string; // e.g. "d20", "d6"
-  faces: number;
-  count: number;
-}
+// Sequential promise queue to prevent overlapping dialogs during AoE / multi-target checks
+let queueChain: Promise<void> = Promise.resolve();
 
-export function extractDiceTerms(terms: any[]): any[] {
-  const diceTerms: any[] = [];
+export function extractDiceTerms(terms: any[]): FoundryDiceTerm[] {
+  const diceTerms: FoundryDiceTerm[] = [];
 
   function traverse(list: any[]) {
     if (!Array.isArray(list)) return;
@@ -32,7 +29,7 @@ export function extractDiceTerms(terms: any[]): any[] {
 }
 
 export async function interceptRollEvaluation(
-  roll: any,
+  roll: FoundryRoll,
   wrapped: (opts?: any) => Promise<any>,
   options: Record<string, any> = {}
 ): Promise<any> {
@@ -48,18 +45,38 @@ export async function interceptRollEvaluation(
     return wrapped(options);
   }
 
-  // Open the physical dice resolver
+  // Queue physical dialog sequentially
+  const currentTask = queueChain;
+  let finishTask: () => void = () => {};
+  queueChain = new Promise<void>((resolve) => {
+    finishTask = resolve;
+  });
+
+  await currentTask;
+
   try {
     const resolver = new PPDiceResolver(roll, context, diceTerms);
     const resolution = await resolver.awaitInput();
 
     if (resolution.isDigital || !resolution.values) {
       // GM selected digital roll fallback
-      return wrapped(options);
+      return await wrapped(options);
     }
 
     // Inject physical values into DiceTerms
     applyPhysicalResults(diceTerms, resolution.values);
+
+    // Tag roll as physical
+    roll.options = roll.options || {};
+    roll.options[FLAGS.PHYSICAL_ROLL] = true;
+
+    // Check DSN 3D dice animation setting
+    const game = (globalThis as any).game;
+    const animateDSN = game?.settings?.get(MODULE_ID, SETTINGS.ANIMATE_DSN) ?? true;
+    if (!animateDSN) {
+      options.skip3d = true;
+      (roll as any).ghost = true;
+    }
 
     // Call wrapped with allowInteractive: false so core resolver doesn't trigger,
     // and AST evaluation computes the final total and modifiers
@@ -67,19 +84,21 @@ export async function interceptRollEvaluation(
   } catch (err) {
     console.error(`[${MODULE_ID}] Error during physical roll interception:`, err);
     // On unexpected error, fall back to digital roll rather than breaking the game
-    return wrapped(options);
+    return await wrapped(options);
+  } finally {
+    finishTask();
   }
 }
 
 export function applyPhysicalResults(
-  diceTerms: any[],
-  valuesMap: Map<any, number[]> | Record<string, number[]>
+  diceTerms: FoundryDiceTerm[],
+  valuesMap: Map<FoundryDiceTerm, number[]> | Record<string, number[]>
 ): void {
   for (const term of diceTerms) {
     const values =
       valuesMap instanceof Map
         ? valuesMap.get(term)
-        : (valuesMap as Record<string, number[]>)[term.id ?? term.denomination];
+        : (valuesMap as Record<string, number[]>)[term.id ?? term.denomination ?? ''];
 
     if (Array.isArray(values) && values.length > 0) {
       term.results = values.map((val) => ({
@@ -98,7 +117,7 @@ export function registerInterception(): void {
     libWrapper.register(
       MODULE_ID,
       'Roll.prototype._evaluate',
-      async function (this: any, wrapped: any, options: Record<string, any> = {}) {
+      async function (this: FoundryRoll, wrapped: any, options: Record<string, any> = {}) {
         return interceptRollEvaluation(this, wrapped, options);
       },
       'MIXED'
@@ -109,7 +128,7 @@ export function registerInterception(): void {
     if (RollClass?.prototype) {
       const originalEvaluate = RollClass.prototype._evaluate;
       RollClass.prototype._evaluate = async function (
-        this: any,
+        this: FoundryRoll,
         options: Record<string, any> = {}
       ) {
         return interceptRollEvaluation(this, originalEvaluate.bind(this), options);

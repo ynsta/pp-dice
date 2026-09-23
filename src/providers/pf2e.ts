@@ -46,6 +46,10 @@ export class PF2eContextProvider implements RollContextProvider {
     // 4. Resolve Title / Action Label
     const title = this.resolveTitle(roll, actor);
 
+    // 5. Fortune / Misfortune
+    const isFortune = this.detectFortune(roll);
+    const isMisfortune = this.detectMisfortune(roll);
+
     return {
       actor,
       token,
@@ -53,6 +57,8 @@ export class PF2eContextProvider implements RollContextProvider {
       isSecret,
       title,
       sourceSystem: 'pf2e',
+      isFortune,
+      isMisfortune,
     };
   }
 
@@ -110,6 +116,24 @@ export class PF2eContextProvider implements RollContextProvider {
       return true;
     }
 
+    return false;
+  }
+
+  detectFortune(roll: any): boolean {
+    if (roll.options?.rollTwice === 'keep-higher') return true;
+    if (roll.formula && typeof roll.formula === 'string' && roll.formula.includes('kh'))
+      return true;
+    const domains = roll.options?.domains;
+    if (Array.isArray(domains) && domains.includes('fortune')) return true;
+    return false;
+  }
+
+  detectMisfortune(roll: any): boolean {
+    if (roll.options?.rollTwice === 'keep-lower') return true;
+    if (roll.formula && typeof roll.formula === 'string' && roll.formula.includes('kl'))
+      return true;
+    const domains = roll.options?.domains;
+    if (Array.isArray(domains) && domains.includes('misfortune')) return true;
     return false;
   }
 

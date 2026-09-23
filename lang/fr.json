@@ -3,6 +3,10 @@
     "Title": "Physical Play Dice",
     "Enabled": "Interception des dés physiques",
     "EnabledHint": "Active l'interception des lancers publics des joueurs pour la saisie manuelle des dés physiques.",
+    "ShowChatBadge": "Afficher le badge de dé physique",
+    "ShowChatBadgeHint": "Affiche un badge 'Dé physique' sur la carte de chat lorsqu'un jet a été saisi manuellement.",
+    "AnimateDSN": "Animer les dés 3D",
+    "AnimateDSNHint": "Affiche l'animation 3D Dice So Nice tombant sur le résultat physique saisi.",
     "ToggleTitle": "Basculer Physical Play Dice",
     "ResolverTitle": "Saisie du dé physique",
     "Submit": "Confirmer le jet",
@@ -13,6 +17,9 @@
     "ActorLabel": "Personnage",
     "ActionLabel": "Action / Test",
     "FormulaLabel": "Formule",
+    "Fortune": "Fortune (Garder le plus haut)",
+    "Misfortune": "Infortune (Garder le plus bas)",
+    "PhysicalBadge": "Dé physique",
     "InvalidInput": "Veuillez saisir un nombre valide pour chaque dé.",
     "BypassedSecret": "Jet secret exécuté automatiquement par le générateur virtuel."
   }

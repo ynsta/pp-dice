@@ -87,6 +87,26 @@ describe('ContextManager & Providers', () => {
     expect(provider.isSecretRoll(nonInteractiveRoll, { allowInteractive: false })).toBe(true);
   });
 
+  it('detects fortune and misfortune traits/options in PF2e', () => {
+    const provider = new PF2eContextProvider();
+
+    const normalRoll = { formula: '1d20+5', options: {} };
+    expect(provider.detectFortune(normalRoll)).toBe(false);
+    expect(provider.detectMisfortune(normalRoll)).toBe(false);
+
+    const fortuneFormula = { formula: '2d20kh+5', options: {} };
+    expect(provider.detectFortune(fortuneFormula)).toBe(true);
+
+    const fortuneOption = { formula: '2d20+5', options: { rollTwice: 'keep-higher' } };
+    expect(provider.detectFortune(fortuneOption)).toBe(true);
+
+    const misfortuneFormula = { formula: '2d20kl+5', options: {} };
+    expect(provider.detectMisfortune(misfortuneFormula)).toBe(true);
+
+    const misfortuneOption = { formula: '2d20+5', options: { rollTwice: 'keep-lower' } };
+    expect(provider.detectMisfortune(misfortuneOption)).toBe(true);
+  });
+
   it('shouldIntercept returns true only for public player rolls', () => {
     const playerRoll = {
       data: {

@@ -5,7 +5,17 @@
     {{/if}}
     <div class='pp-dice-header-text'>
       <h3 class='pp-dice-title'>{{title}}</h3>
-      <span class='pp-dice-formula'><i class='fa-solid fa-calculator'></i> {{formula}}</span>
+      <div class='pp-dice-subtitle'>
+        <span class='pp-dice-formula'><i class='fa-solid fa-calculator'></i> {{formula}}</span>
+        {{#if isFortune}}
+          <span class='pp-dice-badge badge-fortune'><i class='fa-solid fa-clover'></i>
+            {{localize 'PP_DICE.Fortune'}}</span>
+        {{/if}}
+        {{#if isMisfortune}}
+          <span class='pp-dice-badge badge-misfortune'><i class='fa-solid fa-skull'></i>
+            {{localize 'PP_DICE.Misfortune'}}</span>
+        {{/if}}
+      </div>
     </div>
   </header>
 

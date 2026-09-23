@@ -6,6 +6,8 @@ export interface RollEvaluationContext {
   title?: string;
   rollMode?: string;
   sourceSystem?: string;
+  isFortune?: boolean;
+  isMisfortune?: boolean;
 }
 
 export interface RollContextProvider {

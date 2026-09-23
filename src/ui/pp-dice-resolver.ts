@@ -140,6 +140,8 @@ function createResolverAppClass() {
         formula: this.resolver.roll.formula,
         groups: this.resolver.prepareDiceGroups(),
         isPF2e: this.resolver.context.sourceSystem === 'pf2e',
+        isFortune: this.resolver.context.isFortune,
+        isMisfortune: this.resolver.context.isMisfortune,
       };
     }
 

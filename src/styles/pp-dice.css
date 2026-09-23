@@ -45,9 +45,38 @@
   overflow: hidden;
 }
 
+.pp-dice-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .pp-dice-formula {
   font-size: 0.85em;
   color: #a0a6b2;
+}
+
+.pp-dice-badge {
+  font-size: 0.75em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-fortune {
+  background: rgba(30, 160, 60, 0.25);
+  color: #38d669;
+  border: 1px solid #28a745;
+}
+
+.badge-misfortune {
+  background: rgba(220, 50, 50, 0.25);
+  color: #ff6b6b;
+  border: 1px solid #dc3545;
 }
 
 .pp-dice-body {
@@ -150,4 +179,18 @@
 
 .pp-dice-footer .btn-submit:hover {
   background: #00994d;
+}
+
+.pp-dice-chat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 100, 0, 0.15);
+  color: #ff7722;
+  border: 1px solid rgba(255, 100, 0, 0.35);
+  font-size: 0.75em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-top: 4px;
 }

@@ -6,7 +6,7 @@
 
 **Physical Play Dice** (`pp-dice`) is a Foundry VTT module built for in-person tabletop gaming sessions.
 
-When playing around a physical table with a projector/TV showing the map to players without a HUD (e.g. using _Monk's Common Display_), players roll their real physical dice. The GM triggers actions in Foundry on their behalf. `pp-dice` intercepts public player rolls to prompt for the raw physical dice results, allowing Foundry and Pathfinder 2e to automatically calculate all modifiers, multiple attack penalties, criticals, and degrees of success.
+When playing around a physical table with a projector/TV showing the map to players without a HUD (e.g. using [_Monk's Common Display_](https://foundryvtt.com/packages/monks-common-display)), players roll their real physical dice. The GM triggers actions in Foundry on their behalf. `pp-dice` intercepts public player rolls to prompt for the raw physical dice results, allowing Foundry and Pathfinder 2e to automatically calculate all modifiers, multiple attack penalties, criticals, and degrees of success.
 
 <p align="center">
   <img src="docs/images/screenshot00.webp" alt="Physical Roll Input Dialog" width="600" />
@@ -31,6 +31,13 @@ When playing around a physical table with a projector/TV showing the map to play
 - **Chat Log Badges**: Tags manual rolls with a subtle `Physical Roll` badge in chat.
 - **Dice So Nice Support**: 3D dice land directly on the numbers rolled physically at the table.
 - **Quick Session Toggle**: Press `Alt+P` or use the token control tool to enable/disable interception on the fly.
+
+---
+
+## Recommended Companion Modules
+
+- **[Monk's Common Display](https://foundryvtt.com/packages/monks-common-display)**: Send a clean, HUD-less map and combat view to a shared TV or projector.
+- **[Dice So Nice!](https://foundryvtt.com/packages/dice-so-nice)**: Animate 3D dice on the common display that land exactly on the physical results entered by the GM.
 
 ---
 

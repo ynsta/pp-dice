@@ -32,23 +32,42 @@ export function registerSceneControls(): void {
   const game = (globalThis as any).game;
   const Hooks = (globalThis as any).Hooks;
 
-  // Scene Controls Button in Token controls
-  Hooks?.on('getSceneControlButtons', (controls: any[]) => {
-    const tokenControls = controls.find((c: any) => c.name === 'token');
-    if (!tokenControls) return;
-
+  Hooks?.on('getSceneControlButtons', (controls: any[] | Record<string, any>) => {
     const isEnabled = game?.settings?.get(MODULE_ID, SETTINGS.ENABLED) ?? true;
-
-    tokenControls.tools.push({
+    const toolDef = {
       name: 'pp-dice-toggle',
       title: 'PP_DICE.ToggleTitle',
       icon: 'fa-solid fa-dice-d20',
       toggle: true,
       active: isEnabled,
-      onClick: (toggled: boolean) => {
-        game.settings.set(MODULE_ID, SETTINGS.ENABLED, toggled);
+      onChange: (_event: any, active: boolean) => {
+        game?.settings?.set(MODULE_ID, SETTINGS.ENABLED, active);
       },
-    });
+      onClick: (toggled: boolean) => {
+        game?.settings?.set(MODULE_ID, SETTINGS.ENABLED, toggled);
+      },
+    };
+
+    // Foundry v13+ Record structure
+    if (controls && !Array.isArray(controls) && typeof controls === 'object') {
+      const tokensLayer = controls.tokens ?? controls.token;
+      if (tokensLayer) {
+        if (tokensLayer.tools && !Array.isArray(tokensLayer.tools)) {
+          tokensLayer.tools['pp-dice-toggle'] = toolDef;
+        } else if (Array.isArray(tokensLayer.tools)) {
+          tokensLayer.tools.push(toolDef);
+        }
+      }
+      return;
+    }
+
+    // Foundry v12 and legacy Array structure
+    if (Array.isArray(controls)) {
+      const tokenControls = controls.find((c: any) => c.name === 'tokens' || c.name === 'token');
+      if (tokenControls && Array.isArray(tokenControls.tools)) {
+        tokenControls.tools.push(toolDef);
+      }
+    }
   });
 }
 

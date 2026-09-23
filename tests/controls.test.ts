@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { registerKeybindings, toggleEnabled } from '../src/ui/controls';
+import { registerKeybindings, registerSceneControls, toggleEnabled } from '../src/ui/controls';
 import { MODULE_ID, SETTINGS } from '../src/constants';
 
 describe('Controls & Keybindings', () => {
@@ -69,4 +69,88 @@ describe('Controls & Keybindings', () => {
     expect(mockUi.notifications.info).toHaveBeenCalledWith('Physical Play Dice: Disabled');
     expect(mockUi.controls.render).toHaveBeenCalled();
   });
+
+  it('registers scene control toggle on Foundry v14 record-based controls', () => {
+    let registeredHook: ((controls: any) => void) | undefined;
+    (globalThis as any).Hooks = {
+      on: vi.fn((event: string, callback: any) => {
+        if (event === 'getSceneControlButtons') registeredHook = callback;
+      }),
+    };
+
+    registerSceneControls();
+    expect(registeredHook).toBeDefined();
+
+    const v14Controls: Record<string, any> = {
+      tokens: {
+        name: 'tokens',
+        tools: {},
+      },
+    };
+
+    registeredHook!(v14Controls);
+
+    const tool = v14Controls.tokens.tools['pp-dice-toggle'] || v14Controls.tokens.tools.ppDiceToggle;
+    expect(tool).toBeDefined();
+    expect(tool.toggle).toBe(true);
+    expect(typeof tool.onChange).toBe('function');
+
+    tool.onChange(null, false);
+    expect((globalThis as any).game.settings.set).toHaveBeenCalledWith('pp-dice', 'enabled', false);
+
+    tool.onClick(true);
+    expect((globalThis as any).game.settings.set).toHaveBeenCalledWith('pp-dice', 'enabled', true);
+  });
+
+  it('registers scene control toggle on Foundry v12 array-based controls', () => {
+    let registeredHook: ((controls: any) => void) | undefined;
+    (globalThis as any).Hooks = {
+      on: vi.fn((event: string, callback: any) => {
+        if (event === 'getSceneControlButtons') registeredHook = callback;
+      }),
+    };
+
+    registerSceneControls();
+    expect(registeredHook).toBeDefined();
+
+    const v12Controls = [
+      {
+        name: 'tokens',
+        tools: [] as any[],
+      },
+    ];
+
+    registeredHook!(v12Controls);
+
+    const tool = v12Controls[0].tools.find((t: any) => t.name === 'pp-dice-toggle');
+    expect(tool).toBeDefined();
+    expect(tool.toggle).toBe(true);
+
+    tool.onClick(false);
+    expect((globalThis as any).game.settings.set).toHaveBeenCalledWith('pp-dice', 'enabled', false);
+  });
+
+  it('handles record-based controls with array tools and token key fallback', () => {
+    let registeredHook: ((controls: any) => void) | undefined;
+    (globalThis as any).Hooks = {
+      on: vi.fn((event: string, callback: any) => {
+        if (event === 'getSceneControlButtons') registeredHook = callback;
+      }),
+    };
+
+    registerSceneControls();
+    expect(registeredHook).toBeDefined();
+
+    const controls: Record<string, any> = {
+      token: {
+        tools: [] as any[],
+      },
+    };
+
+    registeredHook!(controls);
+
+    expect(controls.token.tools.length).toBe(1);
+    expect(controls.token.tools[0].name).toBe('pp-dice-toggle');
+  });
 });
+

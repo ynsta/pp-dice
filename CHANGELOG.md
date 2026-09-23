@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-09-23
+
+### Added
+
+- Support for empty `Enter` in dice resolver: pressing `Enter` with empty input fields triggers an immediate digital roll.
+- Direct input and frame keydown listener for `Escape` and `R` (`KeyR`), ensuring instant digital roll even when input fields are focused.
+- Canvas pause suppression: `Space` key events inside the resolver dialog are suppressed to avoid pausing Foundry during input.
+
+### Fixed
+
+- Fixed dice modifier evaluation bypass: physical dice terms no longer set `_evaluated = true` prematurely, allowing Foundry's native `_evaluateModifiers()` to process keep/drop (`kh`/`kl`) modifiers correctly.
+- Isolated roll interceptor error boundary: input prompt failures safely fall back to digital rolls, while AST evaluation errors avoid redundant re-execution on mutated term state.
+- Standardized `Alt+P` keybinding registration in `init` hook with core modifier formatting so it is reliably listed and customizable in Foundry's **Configure Controls** menu.
+
 ## [1.0.4] - 2026-09-23
 
 ### Changed

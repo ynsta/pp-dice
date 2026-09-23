@@ -12,6 +12,8 @@ When playing around a physical table with a projector/TV showing the map to play
   <img src="docs/images/screenshot00.webp" alt="Physical Roll Input Dialog" width="600" />
 </p>
 
+> 📖 **[Read the Complete User Manual & Guide](docs/user-guide.md)** for full workflows, keyboard shortcuts, and configuration.
+
 ---
 
 ## Features

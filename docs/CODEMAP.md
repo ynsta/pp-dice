@@ -39,5 +39,5 @@ pp-dice/
 ├── tests/
 │   ├── context-manager.test.ts    # Unit tests for party detection and roll filtering
 │   └── interceptor.test.ts        # Unit tests for term extraction, injection, and queueing
-└── docs/                          # Current-state documentation plane (spec, design, adr, dev)
+└── docs/                          # Documentation plane (user-guide, spec, design, adr, dev)
 ```

@@ -3,18 +3,17 @@ import { MODULE_ID, SETTINGS } from '../constants';
 export function registerKeybindings(): void {
   const game = (globalThis as any).game;
 
+  if (game?.keybindings?.actions?.has(`${MODULE_ID}.toggle`)) {
+    return;
+  }
+
   // Keybinding: Alt+P (configurable by user in Configure Controls -> Package Keybindings)
   if (game?.keybindings) {
     try {
-      const KeyboardMgr =
-        (globalThis as any).KeyboardManager ??
-        (globalThis as any).foundry?.helpers?.interaction?.KeyboardManager;
-      const altModifier = KeyboardMgr?.MODIFIER_KEYS?.ALT ?? 'Alt';
-
       game.keybindings.register(MODULE_ID, 'toggle', {
         name: 'PP_DICE.ToggleTitle',
         hint: 'PP_DICE.ToggleHint',
-        editable: [{ key: 'KeyP', modifiers: [altModifier] }],
+        editable: [{ key: 'KeyP', modifiers: ['Alt'] }],
         restricted: false,
         precedence: (globalThis as any).CONST?.KEYBINDING_PRECEDENCE?.NORMAL ?? 0,
         onDown: () => {

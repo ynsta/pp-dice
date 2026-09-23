@@ -50,6 +50,11 @@ Hooks?.once('init', () => {
   registerInterception();
 });
 
+// Defensive keybinding registration if module is loaded when init is already running
+if ((globalThis as any).game?.keybindings && !(globalThis as any).game?.keybindings?.bindings) {
+  registerKeybindings();
+}
+
 Hooks?.once('ready', () => {
   // Register scene controls button
   registerSceneControls();

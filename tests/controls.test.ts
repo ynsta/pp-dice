@@ -11,6 +11,7 @@ describe('Controls & Keybindings', () => {
 
     mockGame = {
       keybindings: {
+        actions: new Map(),
         register: vi.fn(),
       },
       settings: {
@@ -50,6 +51,14 @@ describe('Controls & Keybindings', () => {
         editable: [{ key: 'KeyP', modifiers: ['Alt'] }],
       })
     );
+  });
+
+  it('does not register keybinding if already present in actions', () => {
+    mockGame.keybindings.actions.set(`${MODULE_ID}.toggle`, {});
+
+    registerKeybindings();
+
+    expect(mockGame.keybindings.register).not.toHaveBeenCalled();
   });
 
   it('toggles enabled setting and renders controls', () => {

@@ -59,4 +59,3 @@ The resolver dialog (`PPDiceResolverApp`) is designed for fast, non-blocking key
 - **Escape / 'R'**: Pressing `Escape` or `R`/`r` immediately triggers a digital roll, captured at both the input level and modal frame level even when input fields are focused.
 - **Space Key Suppression**: The `Space` keydown event is captured and suppressed within the resolver dialog to avoid triggering Foundry's canvas pause toggle.
 - **Shortcut Configuration**: The global toggle shortcut (`Alt+P` by default) is registered during the `init` hook and can be customized via Foundry's **Configure Controls** (`game.keybindings`).
-

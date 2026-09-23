@@ -35,8 +35,8 @@
                 class='die-input'
                 min='{{die.min}}'
                 max='{{die.max}}'
-                placeholder='{{die.max}}'
-                required
+                placeholder='—'
+                title='{{localize "PP_DICE.DieInputHint"}}'
                 autocomplete='off'
               />
               <span class='die-range'>1-{{die.max}}</span>
@@ -47,12 +47,19 @@
     {{/each}}
   </div>
 
+  <div class='pp-dice-hint-bar'>
+    <span class='pp-dice-hint-text'>
+      <i class='fa-solid fa-keyboard'></i>
+      {{localize 'PP_DICE.KeyboardHint'}}
+    </span>
+  </div>
+
   <footer class='pp-dice-footer'>
     <button type='button' class='btn-digital' title='{{localize "PP_DICE.DigitalRollHint"}}'>
       <i class='fa-solid fa-dice'></i>
       {{localize 'PP_DICE.DigitalRoll'}}
     </button>
-    <button type='submit' class='btn-submit'>
+    <button type='submit' class='btn-submit' title='{{localize "PP_DICE.SubmitHint"}}'>
       <i class='fa-solid fa-check'></i>
       {{localize 'PP_DICE.Submit'}}
     </button>

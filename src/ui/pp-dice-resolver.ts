@@ -95,157 +95,232 @@ export class PPDiceResolver {
   }
 }
 
-// Concrete ApplicationV2 class
-function createResolverAppClass() {
+// Concrete ApplicationV2 class or fallback base class
+function getBaseApplicationClass(): any {
   const foundryGlobal = (globalThis as unknown as { foundry?: any }).foundry;
-  if (!foundryGlobal?.applications?.api?.ApplicationV2) {
-    return class DummyApp {};
+  if (foundryGlobal?.applications?.api?.ApplicationV2) {
+    return foundryGlobal.applications.api.HandlebarsApplicationMixin(
+      foundryGlobal.applications.api.ApplicationV2
+    );
   }
-
-  const { ApplicationV2, HandlebarsApplicationMixin } = foundryGlobal.applications.api;
-
-  return class extends HandlebarsApplicationMixin(ApplicationV2) {
-    private resolver: PPDiceResolver;
-    private keyHandler?: (e: KeyboardEvent) => void;
-
-    constructor(resolver: PPDiceResolver, options: Record<string, unknown> = {}) {
-      super(options);
-      this.resolver = resolver;
+  return class BaseApplicationV2 {
+    options: Record<string, unknown>;
+    element: any = null;
+    constructor(options: Record<string, unknown> = {}) {
+      this.options = options;
     }
-
-    static DEFAULT_OPTIONS = {
-      id: 'pp-dice-resolver',
-      classes: ['pp-dice-window'],
-      tag: 'form',
-      window: {
-        title: 'PP_DICE.ResolverTitle',
-        icon: 'fa-solid fa-dice-d20',
-        resizable: false,
-      },
-      position: {
-        width: 440,
-        height: 'auto',
-      },
-    };
-
-    static PARTS = {
-      main: {
-        template: `modules/${MODULE_ID}/templates/dice-resolver.hbs`,
-      },
-    };
-
-    async _prepareContext() {
-      return {
-        title: this.resolver.context.title || 'Roll',
-        actor: this.resolver.context.actor,
-        formula: this.resolver.roll.formula,
-        groups: this.resolver.prepareDiceGroups(),
-        isPF2e: this.resolver.context.sourceSystem === 'pf2e',
-        isFortune: this.resolver.context.isFortune,
-        isMisfortune: this.resolver.context.isMisfortune,
-      };
-    }
-
-    _onRender(context: unknown, options: unknown) {
-      super._onRender(context, options);
-
-      const html = this.element;
-      const firstInput = html.querySelector('input.die-input') as HTMLInputElement | null;
-      if (firstInput) {
-        firstInput.focus();
-        firstInput.select();
-      }
-
-      // Clean up previous window listener if re-rendering
-      if (this.keyHandler) {
-        window.removeEventListener('keydown', this.keyHandler, true);
-      }
-
-      const handleKey = (e: KeyboardEvent) => {
-        // Prevent Space from triggering Foundry global pause while resolver is active
-        if (e.code === 'Space') {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-
-        // Allow browser reload (Ctrl+R / Cmd+R)
-        if (e.ctrlKey || e.altKey || e.metaKey) return;
-
-        // Escape, 'r', 'R', or code 'KeyR' triggers instant digital roll fallback
-        if (
-          e.key === 'Escape' ||
-          e.code === 'Escape' ||
-          e.key === 'r' ||
-          e.key === 'R' ||
-          e.code === 'KeyR'
-        ) {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          this.resolver.submitDigital();
-          this.close();
-        }
-      };
-
-      this.keyHandler = handleKey;
-      // Capture on window so Escape and R work even when input fields have focus
-      window.addEventListener('keydown', handleKey, true);
-
-      const digitalBtn = html.querySelector('.btn-digital');
-      digitalBtn?.addEventListener('click', (e: Event) => {
-        e.preventDefault();
-        this.resolver.submitDigital();
-        this.close();
-      });
-
-      html.addEventListener('submit', (e: Event) => {
-        e.preventDefault();
-        const formData = new FormData(html as HTMLFormElement);
-        const valuesMap = new Map<FoundryDiceTerm, number[]>();
-
-        for (let tIdx = 0; tIdx < this.resolver.diceTerms.length; tIdx++) {
-          const term = this.resolver.diceTerms[tIdx];
-          if (!term) continue;
-          const count = term.number ?? 1;
-          const values: number[] = [];
-
-          for (let dIdx = 0; dIdx < count; dIdx++) {
-            const raw = formData.get(`die_${tIdx}_${dIdx}`);
-            const num = Number(raw);
-            if (!isNaN(num) && num > 0) {
-              values.push(num);
-            } else {
-              values.push(
-                term.randomFace ? term.randomFace() : Math.floor(Math.random() * term.faces) + 1
-              );
-            }
-          }
-          valuesMap.set(term, values);
-        }
-
-        this.resolver.submitPhysical(valuesMap);
-        this.close();
-      });
-    }
-
-    _onClose(options: unknown) {
-      if (this.keyHandler) {
-        window.removeEventListener('keydown', this.keyHandler, true);
-        this.keyHandler = undefined;
-      }
-      super._onClose(options);
-    }
-
-    async close(options?: unknown) {
-      if (this.keyHandler) {
-        window.removeEventListener('keydown', this.keyHandler, true);
-        this.keyHandler = undefined;
-      }
-      this.resolver.submitDigital();
-      return super.close(options);
+    _attachFrameListeners() {}
+    _onRender(_context: unknown, _options: unknown) {}
+    _onClose(_options: unknown) {}
+    async close(_options?: unknown) {}
+    async render(_options?: unknown) {
+      return this;
     }
   };
 }
 
-export const PPDiceResolverApp = createResolverAppClass() as any;
+export class PPDiceResolverApp extends getBaseApplicationClass() {
+  public resolver: PPDiceResolver;
+  public keyHandler?: (e: KeyboardEvent) => void;
+
+  constructor(resolver: PPDiceResolver, options: Record<string, unknown> = {}) {
+    super(options);
+    this.resolver = resolver;
+  }
+
+  static DEFAULT_OPTIONS = {
+    id: 'pp-dice-resolver',
+    classes: ['pp-dice-window'],
+    tag: 'form',
+    window: {
+      title: 'PP_DICE.ResolverTitle',
+      icon: 'fa-solid fa-dice-d20',
+      resizable: false,
+    },
+    position: {
+      width: 440,
+      height: 'auto',
+    },
+  };
+
+  static PARTS = {
+    main: {
+      template: `modules/${MODULE_ID}/templates/dice-resolver.hbs`,
+    },
+  };
+
+  async _prepareContext() {
+    return {
+      title: this.resolver.context.title || 'Roll',
+      actor: this.resolver.context.actor,
+      formula: this.resolver.roll.formula,
+      groups: this.resolver.prepareDiceGroups(),
+      isPF2e: this.resolver.context.sourceSystem === 'pf2e',
+      isFortune: this.resolver.context.isFortune,
+      isMisfortune: this.resolver.context.isMisfortune,
+    };
+  }
+
+  _onKeyDown(e: KeyboardEvent): void {
+    // Prevent Space from triggering Foundry global pause while resolver is active
+    if (e.code === 'Space') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // Allow browser reload (Ctrl+R / Cmd+R)
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+    // Escape, 'r', 'R', or code 'KeyR' triggers instant digital roll fallback
+    if (
+      e.key === 'Escape' ||
+      e.code === 'Escape' ||
+      e.key === 'r' ||
+      e.key === 'R' ||
+      e.code === 'KeyR'
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      this.resolver.submitDigital();
+      this.close();
+    }
+  }
+
+  _attachFrameListeners(): void {
+    super._attachFrameListeners();
+
+    // Clean up previous window listener if any
+    if (this.keyHandler && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.keyHandler, true);
+    }
+
+    this.keyHandler = (e: KeyboardEvent) => this._onKeyDown(e);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', this.keyHandler, true);
+    }
+
+    if (this.element) {
+      this.element.addEventListener('keydown', (e: KeyboardEvent) => this._onKeyDown(e));
+    }
+  }
+
+  _onRender(context: unknown, options: unknown) {
+    super._onRender(context, options);
+
+    const html = this.element;
+    if (!html) return;
+
+    const firstInput = html.querySelector?.('input.die-input') as HTMLInputElement | null;
+    if (firstInput) {
+      firstInput.focus?.();
+      firstInput.select?.();
+    }
+
+    // Attach keydown directly to each input.die-input
+    const dieInputs = Array.from(
+      html.querySelectorAll?.('input.die-input') ?? []
+    ) as HTMLInputElement[];
+    for (const input of dieInputs) {
+      input.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const form = html as HTMLFormElement;
+          if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+          } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true }));
+          }
+          return;
+        }
+        this._onKeyDown(e);
+      });
+    }
+
+    const digitalBtn = html.querySelector?.('.btn-digital');
+    digitalBtn?.addEventListener('click', (e: Event) => {
+      e.preventDefault();
+      this.resolver.submitDigital();
+      this.close();
+    });
+
+    html.addEventListener('submit', (e: Event) => {
+      e.preventDefault();
+
+      // Check if all die inputs are blank (empty/whitespace)
+      const inputs = Array.from(
+        html.querySelectorAll?.('input.die-input') ?? []
+      ) as HTMLInputElement[];
+      const allBlank =
+        inputs.length > 0
+          ? inputs.every((input) => !input.value || input.value.trim() === '')
+          : true;
+
+      if (allBlank) {
+        this.resolver.submitDigital();
+        this.close();
+        return;
+      }
+
+      let formData: { get(name: string): any } | null = null;
+      try {
+        formData = new FormData(html as HTMLFormElement);
+      } catch {
+        // Fallback for mock environments without DOM FormData
+      }
+
+      const getFieldValue = (name: string): string => {
+        if (formData && typeof formData.get === 'function') {
+          const val = formData.get(name);
+          return typeof val === 'string' ? val : '';
+        }
+        const el = html.querySelector?.(`[name="${name}"]`) as HTMLInputElement | null;
+        return el?.value ?? '';
+      };
+
+      const valuesMap = new Map<FoundryDiceTerm, number[]>();
+
+      for (let tIdx = 0; tIdx < this.resolver.diceTerms.length; tIdx++) {
+        const term = this.resolver.diceTerms[tIdx];
+        if (!term) continue;
+        const count = term.number ?? 1;
+        const values: number[] = [];
+
+        for (let dIdx = 0; dIdx < count; dIdx++) {
+          const raw = getFieldValue(`die_${tIdx}_${dIdx}`);
+          const rawStr = raw.trim();
+          const num = Number(rawStr);
+          if (rawStr !== '' && !isNaN(num) && num > 0) {
+            values.push(num);
+          } else {
+            values.push(
+              term.randomFace ? term.randomFace() : Math.floor(Math.random() * term.faces) + 1
+            );
+          }
+        }
+        valuesMap.set(term, values);
+      }
+
+      this.resolver.submitPhysical(valuesMap);
+      this.close();
+    });
+  }
+
+  _onClose(options: unknown) {
+    if (this.keyHandler && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.keyHandler, true);
+      this.keyHandler = undefined;
+    }
+    super._onClose(options);
+  }
+
+  async close(options?: unknown) {
+    if (this.keyHandler && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.keyHandler, true);
+      this.keyHandler = undefined;
+    }
+    this.resolver.submitDigital();
+    return super.close(options);
+  }
+}

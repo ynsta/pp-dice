@@ -139,6 +139,19 @@
   color: #7b8291;
 }
 
+.pp-dice-hint-bar {
+  text-align: center;
+  padding: 2px 4px;
+}
+
+.pp-dice-hint-text {
+  font-size: 0.75em;
+  color: #7b8291;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .pp-dice-footer {
   display: flex;
   justify-content: space-between;

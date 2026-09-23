@@ -5,17 +5,27 @@ export function registerKeybindings(): void {
 
   // Keybinding: Alt+P (configurable by user in Configure Controls -> Package Keybindings)
   if (game?.keybindings) {
-    game.keybindings.register(MODULE_ID, 'toggle', {
-      name: 'PP_DICE.ToggleTitle',
-      hint: 'PP_DICE.ToggleHint',
-      editable: [{ key: 'KeyP', modifiers: ['Alt'] }],
-      restricted: true,
-      precedence: (globalThis as any).CONST?.KEYBINDING_PRECEDENCE?.NORMAL,
-      onDown: () => {
-        toggleEnabled();
-        return true;
-      },
-    });
+    try {
+      const KeyboardMgr =
+        (globalThis as any).KeyboardManager ??
+        (globalThis as any).foundry?.helpers?.interaction?.KeyboardManager;
+      const altModifier = KeyboardMgr?.MODIFIER_KEYS?.ALT ?? 'Alt';
+
+      game.keybindings.register(MODULE_ID, 'toggle', {
+        name: 'PP_DICE.ToggleTitle',
+        hint: 'PP_DICE.ToggleHint',
+        editable: [{ key: 'KeyP', modifiers: [altModifier] }],
+        restricted: false,
+        precedence: (globalThis as any).CONST?.KEYBINDING_PRECEDENCE?.NORMAL ?? 0,
+        onDown: () => {
+          toggleEnabled();
+          return true;
+        },
+      });
+      console.log(`[${MODULE_ID}] Keybinding 'toggle' registered successfully.`);
+    } catch (err) {
+      console.error(`[${MODULE_ID}] Failed to register keybindings:`, err);
+    }
   }
 }
 

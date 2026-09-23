@@ -1,6 +1,6 @@
 {
   "name": "pp-dice",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Physical Play Dice - In-person physical dice interception for Foundry VTT",
   "type": "module",
   "scripts": {

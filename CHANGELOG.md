@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.7] - 2026-09-23
+## [1.0.8] - 2026-09-23
+
+### Changed
+
+- Repositioned the chat card physical roll badge to stack neatly under the timestamp and trash icon, avoiding horizontal crowding with the character name.
+- Shortened badge copy to compact "Physical" (EN) / "Physique" (FR) alongside the d20 die icon.
+- Modularized chat badge rendering logic into dedicated `chat-badge.ts` with comprehensive unit tests.
 
 ### Added
 

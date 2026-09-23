@@ -1,6 +1,7 @@
-import { MODULE_ID, SETTINGS, FLAGS } from './constants';
+import { MODULE_ID, SETTINGS } from './constants';
 import { registerInterception } from './core/interceptor';
 import { registerKeybindings, registerSceneControls } from './ui/controls';
+import { renderChatBadge } from './ui/chat-badge';
 import './styles/pp-dice.css';
 
 const Hooks = (globalThis as any).Hooks;
@@ -61,24 +62,7 @@ Hooks?.once('ready', () => {
 
   // Register chat badge renderer
   Hooks.on('renderChatMessage', (message: any, html: any) => {
-    const game = (globalThis as any).game;
-    const showBadge = game?.settings?.get(MODULE_ID, SETTINGS.SHOW_CHAT_BADGE) ?? true;
-    if (!showBadge) return;
-
-    const isPhysical = message.rolls?.some((r: any) => r.options?.[FLAGS.PHYSICAL_ROLL]);
-    if (isPhysical) {
-      const element = html instanceof HTMLElement ? html : (html[0] ?? html);
-      if (!element) return;
-
-      const badge = document.createElement('span');
-      badge.className = 'pp-dice-chat-tag';
-      badge.innerHTML = `<i class="fa-solid fa-dice-d20"></i> ${game.i18n.localize('PP_DICE.PhysicalBadge')}`;
-
-      const target =
-        element.querySelector('.message-header .message-metadata') ||
-        element.querySelector('.message-header');
-      target?.prepend(badge);
-    }
+    renderChatBadge(message, html);
   });
 
   console.log(

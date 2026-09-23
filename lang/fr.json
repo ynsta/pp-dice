@@ -23,7 +23,7 @@
     "FormulaLabel": "Formule",
     "Fortune": "Fortune (Garder le plus haut)",
     "Misfortune": "Infortune (Garder le plus bas)",
-    "PhysicalBadge": "Dé physique",
+    "PhysicalBadge": "Physique",
     "InvalidInput": "Veuillez saisir un nombre valide pour chaque dé.",
     "BypassedSecret": "Jet secret exécuté automatiquement par le générateur virtuel."
   }

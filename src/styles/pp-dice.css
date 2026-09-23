@@ -194,6 +194,20 @@
   background: #00994d;
 }
 
+.message-header .message-metadata.pp-dice-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  row-gap: 3px;
+}
+
+.pp-dice-badge-container {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .pp-dice-chat-tag {
   display: inline-flex;
   align-items: center;
@@ -201,9 +215,9 @@
   background: rgba(255, 100, 0, 0.15);
   color: #ff7722;
   border: 1px solid rgba(255, 100, 0, 0.35);
-  font-size: 0.75em;
-  padding: 1px 6px;
+  font-size: 0.72em;
+  padding: 1px 5px;
   border-radius: 4px;
   font-weight: 600;
-  margin-top: 4px;
+  line-height: 1.15;
 }

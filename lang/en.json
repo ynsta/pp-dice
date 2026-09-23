@@ -23,7 +23,7 @@
     "FormulaLabel": "Formula",
     "Fortune": "Fortune (Keep Highest)",
     "Misfortune": "Misfortune (Keep Lowest)",
-    "PhysicalBadge": "Physical Roll",
+    "PhysicalBadge": "Physical",
     "InvalidInput": "Please enter a valid number for all dice.",
     "BypassedSecret": "Secret roll bypassed to digital RNG."
   }

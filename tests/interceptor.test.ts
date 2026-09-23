@@ -31,7 +31,7 @@ describe('Dice Interceptor Engine', () => {
     expect(extracted.map((t) => t.faces)).toEqual([20, 6, 8]);
   });
 
-  it('applies physical results into DiceTerm results array', () => {
+  it('applies physical results into DiceTerm results array without setting _evaluated', () => {
     const d20Term: any = { faces: 20, number: 1, id: 'd20' };
     const d6Term: any = { faces: 6, number: 2, id: 'd6' };
 
@@ -41,14 +41,63 @@ describe('Dice Interceptor Engine', () => {
 
     applyPhysicalResults([d20Term, d6Term], valuesMap);
 
-    expect(d20Term._evaluated).toBe(true);
+    expect(d20Term._evaluated).toBeUndefined();
     expect(d20Term.results).toEqual([{ result: 17, active: true }]);
 
-    expect(d6Term._evaluated).toBe(true);
+    expect(d6Term._evaluated).toBeUndefined();
     expect(d6Term.results).toEqual([
       { result: 4, active: true },
       { result: 5, active: true },
     ]);
+  });
+
+  it('allows Foundry modifier evaluation for keep-highest (2d20kh) without premature _evaluated flag', async () => {
+    vi.spyOn(contextManager, 'shouldIntercept').mockReturnValue({
+      intercept: true,
+      context: { isPlayer: true, isSecret: false, title: 'Advantage Roll' },
+    });
+
+    const d20Term: any = {
+      faces: 20,
+      number: 2,
+      modifiers: ['kh'],
+      results: [],
+      _evaluated: undefined,
+    };
+    const mockRoll: any = { formula: '2d20kh', terms: [d20Term] };
+
+    const valuesMap = new Map();
+    valuesMap.set(d20Term, [12, 18]);
+
+    vi.spyOn(PPDiceResolver.prototype, 'awaitInput').mockResolvedValue({
+      isDigital: false,
+      values: valuesMap,
+    });
+
+    const mockWrapped = vi.fn().mockImplementation(async (opts) => {
+      expect(opts.allowInteractive).toBe(false);
+      // Verify term has physical results but _evaluated is NOT set to true prematurely
+      expect(d20Term._evaluated).toBeUndefined();
+      expect(d20Term.results).toEqual([
+        { result: 12, active: true },
+        { result: 18, active: true },
+      ]);
+
+      // Simulate Foundry's DiceTerm._evaluateModifiers() & _evaluateAsync()
+      // Lower die 12 is marked inactive, kept die 18 stays active
+      d20Term.results[0].active = false;
+      d20Term._evaluated = true;
+      return { total: 18, evaluated: true };
+    });
+
+    const result = await interceptRollEvaluation(mockRoll, mockWrapped);
+
+    expect(result.total).toBe(18);
+    expect(d20Term._evaluated).toBe(true);
+    expect(d20Term.results[0].active).toBe(false);
+    expect(d20Term.results[1].active).toBe(true);
+    expect(mockRoll.options[FLAGS.PHYSICAL_ROLL]).toBe(true);
+    expect(mockWrapped).toHaveBeenCalledOnce();
   });
 
   it('bypasses interception when shouldIntercept is false', async () => {
@@ -145,5 +194,56 @@ describe('Dice Interceptor Engine', () => {
     await Promise.all([p1, p2]);
 
     expect(order).toEqual([1, 2]);
+  });
+
+  it('falls back to wrapped RNG when resolver rejects / throws', async () => {
+    vi.spyOn(contextManager, 'shouldIntercept').mockReturnValue({
+      intercept: true,
+      context: { isPlayer: true, isSecret: false },
+    });
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const d20Term: any = { faces: 20, number: 1 };
+    const mockRoll: any = { formula: '1d20+4', terms: [d20Term] };
+
+    vi.spyOn(PPDiceResolver.prototype, 'awaitInput').mockRejectedValue(
+      new Error('Resolver dialog error')
+    );
+
+    const mockWrapped = vi.fn().mockResolvedValue('digital-fallback-result');
+    const result = await interceptRollEvaluation(mockRoll, mockWrapped, { customOpt: 'abc' });
+
+    expect(result).toBe('digital-fallback-result');
+    expect(mockWrapped).toHaveBeenCalledWith({ customOpt: 'abc' });
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(mockRoll.options?.[FLAGS.PHYSICAL_ROLL]).toBeUndefined();
+  });
+
+  it('does not re-invoke wrapped on mutated state if native evaluation throws', async () => {
+    vi.spyOn(contextManager, 'shouldIntercept').mockReturnValue({
+      intercept: true,
+      context: { isPlayer: true, isSecret: false },
+    });
+
+    const d20Term: any = { faces: 20, number: 1 };
+    const mockRoll: any = { formula: '1d20+4', terms: [d20Term] };
+
+    const valuesMap = new Map();
+    valuesMap.set(d20Term, [15]);
+
+    vi.spyOn(PPDiceResolver.prototype, 'awaitInput').mockResolvedValue({
+      isDigital: false,
+      values: valuesMap,
+    });
+
+    const mockWrapped = vi.fn().mockRejectedValue(new Error('Native evaluation syntax failure'));
+
+    await expect(interceptRollEvaluation(mockRoll, mockWrapped)).rejects.toThrow(
+      'Native evaluation syntax failure'
+    );
+
+    // Ensure wrapped was only called once with physical flags, not retried
+    expect(mockWrapped).toHaveBeenCalledOnce();
+    expect(mockWrapped).toHaveBeenCalledWith({ allowInteractive: false });
   });
 });

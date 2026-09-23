@@ -39,7 +39,7 @@ flowchart TD
 
 - Wraps `Roll.prototype._evaluate` via `libWrapper` with fallback monkey-patch.
 - **Sequential Promise Queue (`queueChain`)**: Prevents overlapping modals when multiple checks trigger simultaneously.
-- **Term Injection (`applyPhysicalResults`)**: Replaces `results` array on target `DiceTerm` instances, marks `_evaluated = true`, and passes `allowInteractive: false` to the wrapped evaluation.
+- **Term Injection (`applyPhysicalResults`)**: Replaces `results` array on target `DiceTerm` instances with active results (leaving `_evaluated` for Foundry's native modifier evaluation), and passes `allowInteractive: false` to the wrapped evaluation.
 
 ### 3. User Interface (`src/ui/pp-dice-resolver.ts`)
 

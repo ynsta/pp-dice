@@ -1,6 +1,6 @@
 import { MODULE_ID, FLAGS, SETTINGS } from '../constants';
 import { contextManager } from './context-manager';
-import { PPDiceResolver } from '../ui/pp-dice-resolver';
+import { PPDiceResolver, ResolutionResult } from '../ui/pp-dice-resolver';
 import { FoundryDiceTerm, FoundryRoll } from '../types/foundry';
 
 // Sequential promise queue to prevent overlapping dialogs during AoE / multi-target checks
@@ -55,8 +55,15 @@ export async function interceptRollEvaluation(
   await currentTask;
 
   try {
-    const resolver = new PPDiceResolver(roll, context, diceTerms);
-    const resolution = await resolver.awaitInput();
+    let resolution: ResolutionResult;
+    try {
+      const resolver = new PPDiceResolver(roll, context, diceTerms);
+      resolution = await resolver.awaitInput();
+    } catch (err) {
+      console.error(`[${MODULE_ID}] Error during physical roll interception:`, err);
+      // On resolver error, fall back to digital roll rather than breaking the game
+      return await wrapped(options);
+    }
 
     if (resolution.isDigital || !resolution.values) {
       // GM selected digital roll fallback
@@ -81,10 +88,6 @@ export async function interceptRollEvaluation(
     // Call wrapped with allowInteractive: false so core resolver doesn't trigger,
     // and AST evaluation computes the final total and modifiers
     return await wrapped({ ...options, allowInteractive: false });
-  } catch (err) {
-    console.error(`[${MODULE_ID}] Error during physical roll interception:`, err);
-    // On unexpected error, fall back to digital roll rather than breaking the game
-    return await wrapped(options);
   } finally {
     finishTask();
   }
@@ -105,7 +108,6 @@ export function applyPhysicalResults(
         result: Number(val),
         active: true,
       }));
-      term._evaluated = true;
     }
   }
 }

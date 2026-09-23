@@ -2,7 +2,7 @@
 
 [![Foundry VTT v14](https://img.shields.io/badge/Foundry-v14-orange.svg)](https://foundryvtt.com)
 [![PF2e Compatible](https://img.shields.io/badge/PF2e-8.5.1+-blue.svg)](https://github.com/foundryvtt/pf2e)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 **Physical Play Dice** (`pp-dice`) is a Foundry VTT module built for in-person tabletop gaming sessions.
 
@@ -67,4 +67,4 @@ npm run build
 
 ## License
 
-[MIT](LICENSE) © [ynsta](https://github.com/ynsta)
+[Apache-2.0](LICENSE) © [ynsta](https://github.com/ynsta)

@@ -23,7 +23,7 @@
     "physical-play"
   ],
   "author": "ynsta",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/ynsta/pp-dice/issues"
   },

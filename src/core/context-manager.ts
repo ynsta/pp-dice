@@ -5,18 +5,27 @@ import { GenericContextProvider } from '../providers/generic';
 
 export class ContextManager {
   private providers: RollContextProvider[] = [];
+  private initialized = false;
 
   constructor() {
-    this.registerProvider(new PF2eContextProvider());
-    // Generic fallback is pushed last
-    this.providers.push(new GenericContextProvider());
+    // Lazily initialized in ensureProviders() to avoid circular import issues
+  }
+
+  private ensureProviders(): void {
+    if (!this.initialized) {
+      this.initialized = true;
+      this.providers.unshift(new PF2eContextProvider());
+      this.providers.push(new GenericContextProvider());
+    }
   }
 
   registerProvider(provider: RollContextProvider): void {
+    this.ensureProviders();
     this.providers.unshift(provider); // New custom/system providers take precedence over existing
   }
 
   resolve(roll: any, options: Record<string, any> = {}): RollEvaluationContext {
+    this.ensureProviders();
     for (const provider of this.providers) {
       if (provider.supports()) {
         const context = provider.resolveContext(roll, options);

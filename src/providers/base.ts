@@ -4,6 +4,7 @@ export interface RollEvaluationContext {
   isPlayer: boolean;
   isSecret: boolean;
   title?: string;
+  action?: string;
   rollMode?: string;
   sourceSystem?: string;
   isFortune?: boolean;

@@ -1,5 +1,6 @@
 import { RollContextProvider, RollEvaluationContext } from './base';
 import { isSecretRoll, isFortuneRoll, isMisfortuneRoll } from '../core/roll-helpers';
+import { getPf2eActiveCheckContext } from '../core/interceptor';
 
 export class PF2eContextProvider implements RollContextProvider {
   name = 'pf2e';
@@ -21,6 +22,29 @@ export class PF2eContextProvider implements RollContextProvider {
 
     if (!actor && roll.data?.token?.actor) {
       actor = roll.data.token.actor;
+    }
+
+    if (!actor && (roll as any)._actor) {
+      actor = (roll as any)._actor;
+      if (!token && (roll as any)._combatant?.token) {
+        token = (roll as any)._combatant.token;
+      }
+    }
+
+    // Check active check context from Check.roll wrapper
+    const activeCheck = getPf2eActiveCheckContext();
+    if (activeCheck && !(roll as any)._pf2eContext) {
+      (roll as any)._pf2eContext = activeCheck;
+    }
+    if (!actor && activeCheck?.actor) {
+      actor = activeCheck.actor;
+      if (!token && activeCheck.token) {
+        token = activeCheck.token;
+      }
+    }
+
+    if (!actor && (roll as any)._pf2eContext?.actor) {
+      actor = (roll as any)._pf2eContext.actor;
     }
 
     if (!actor && roll.options?.actor) {
@@ -47,16 +71,22 @@ export class PF2eContextProvider implements RollContextProvider {
       actor = game.user.character;
     }
 
-    // Fallback: match item identifier (e.g. "itemId.staff.melee" from PF2e character sheet strikes)
+    // Fallback: match item identifier or actor UUID
     if (!actor && typeof roll.options?.identifier === 'string') {
-      const itemId = roll.options.identifier.split('.')[0];
-      if (itemId) {
-        actor =
-          game?.actors?.find?.((a: any) =>
-            typeof a.items?.has === 'function'
-              ? a.items.has(itemId)
-              : a.items?.some?.((i: any) => i?.id === itemId || i?._id === itemId)
-          ) ?? null;
+      const identifier = roll.options.identifier;
+      if (identifier.startsWith('Actor.') || identifier.startsWith('Scene.')) {
+        const doc = (globalThis as any).fromUuidSync?.(identifier);
+        actor = doc?.actor ?? doc ?? null;
+      } else {
+        const itemId = identifier.split('.')[0];
+        if (itemId) {
+          actor =
+            game?.actors?.find?.((a: any) =>
+              typeof a.items?.has === 'function'
+                ? a.items.has(itemId)
+                : a.items?.some?.((i: any) => i?.id === itemId || i?._id === itemId)
+            ) ?? null;
+        }
       }
     }
 
@@ -76,10 +106,22 @@ export class PF2eContextProvider implements RollContextProvider {
     // 3. Check Secrecy
     const isSecret = this.isSecretRoll(roll, options);
 
-    // 4. Resolve Title / Action Label
+    // 4. Resolve Action
+    let action = roll.options?.action ?? (roll as any)._pf2eContext?.action ?? null;
+    if (
+      !action &&
+      (roll.options?.type === 'initiative' ||
+        roll.options?.domains?.includes?.('initiative') ||
+        (roll as any)._pf2eContext?.type === 'initiative' ||
+        (roll as any)._pf2eContext?.domains?.includes?.('initiative'))
+    ) {
+      action = 'initiative';
+    }
+
+    // 5. Resolve Title / Action Label
     const title = this.resolveTitle(roll, actor);
 
-    // 5. Fortune / Misfortune
+    // 6. Fortune / Misfortune
     const isFortune = this.detectFortune(roll);
     const isMisfortune = this.detectMisfortune(roll);
 
@@ -89,7 +131,8 @@ export class PF2eContextProvider implements RollContextProvider {
       isPlayer,
       isSecret,
       title,
-      sourceSystem: 'pf2e',
+      action: action ?? undefined,
+      sourceSystem: game?.system?.id ?? 'pf2e',
       isFortune,
       isMisfortune,
     };
@@ -142,11 +185,22 @@ export class PF2eContextProvider implements RollContextProvider {
     return isMisfortuneRoll(roll);
   }
 
-  private resolveTitle(roll: any, actor: any): string {
+  resolveTitle(roll: any, actor: any, _item?: any, _options?: Record<string, any>): string {
+    const isInitiative =
+      roll?.options?.type === 'initiative' ||
+      roll?.options?.domains?.includes?.('initiative') ||
+      (roll as any)?._pf2eContext?.type === 'initiative' ||
+      (roll as any)?._pf2eContext?.domains?.includes?.('initiative');
+
+    if (isInitiative) {
+      const actorName = actor?.name;
+      return actorName ? `${actorName} — Initiative` : 'Initiative';
+    }
+
     const parts: string[] = [];
     if (actor?.name) parts.push(actor.name);
 
-    const action = roll.options?.action || roll.options?.type || roll.options?.identifier;
+    const action = roll?.options?.action || roll?.options?.type || roll?.options?.identifier;
     if (action) {
       parts.push(String(action));
     }

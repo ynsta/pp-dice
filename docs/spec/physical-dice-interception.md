@@ -22,6 +22,17 @@ A roll immediately evaluates via digital RNG without user prompting if:
 4. The user toggles `pp-dice` off via scene controls or shortcut (`Alt+P`).
 5. The roll is an internal sub-roll belonging to a parent roll (`roll._root` is present).
 
+### 3.5 Initiative Roll Interception
+
+Initiative rolls initiated from the Combat Tracker or character sheets are selectively intercepted:
+
+- **Player Character Initiative**: Intercepted when the combatant is associated with a player character (`actor.type === 'character'` or player-owned). Prompts the GM for physical dice results using the contextual title `<Actor Name> — Initiative`.
+- **Automatic NPC Bypass**: Initiative rolls for NPCs (`actor.type === 'npc'`) automatically bypass the manual input resolver and resolve via digital RNG without any GM prompt.
+- **Sequential Prompt Queue**: When multiple combatants roll initiative simultaneously (such as clicking "Roll All" or "Roll All PCs" in the Combat Tracker), prompt dialogs are processed sequentially in queue order without overlap or focus collisions.
+- **System Coverage**:
+  - **Pathfinder 2e (PF2e) & Starfinder 2e (SF2e)**: Intercepts `Check.roll` when `type === 'initiative'` or domain includes `'initiative'`, tracking active check context and resolving title as `"<Actor Name> — Initiative"`.
+  - **Generic Foundry**: Wraps `Combatant.prototype.getInitiativeRoll` to tag rolls with combatant and actor references (`_actor`, `_combatant`, `options.type = 'initiative'`, `options.initiative = true`), ensuring player characters prompt for physical input and NPCs roll digitally.
+
 ## 4. Evaluation and Calculation
 
 Injected values replace the raw die face results within the `DiceTerm` objects (`active: true`), without prematurely setting `_evaluated = true`. This preserves term state so Foundry's native modifier evaluation (`_evaluateModifiers()`) handles keep/drop (`kh`/`kl`) and other dice modifiers faithfully without bypass. Foundry's Abstract Syntax Tree (AST) and system modifiers (such as PF2e Multiple Attack Penalty, ability modifiers, and item bonuses) are computed on the resulting sum without modification to game logic.

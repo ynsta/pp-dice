@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.13] - 2026-09-24
+
+### Added
+
+- **Player Initiative Interception:** Intercept initiative rolls for player characters (`actor.type === 'character'` or player-owned) triggered from the Combat Tracker or character sheets.
+- **System Support (PF2e, SF2e & Generic):** Context-aware initiative handling for Pathfinder 2e and Starfinder 2e via `Check.roll` (with contextual `"<Actor> — Initiative"` prompt title), and generic Foundry core support via `Combatant#getInitiativeRoll`.
+- **Sequential Prompt Queue:** Multiple player initiatives rolled together (e.g. "Roll All PCs" or "Roll All") queue prompts sequentially without dialog collisions or lost focus.
+- **Automatic NPC Initiative Bypass:** NPC combatants automatically bypass manual entry prompts and roll digitally via native RNG without GM intervention.
+
 ## [1.0.12] - 2026-09-24
 
 ### Fixed

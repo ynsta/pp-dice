@@ -43,7 +43,9 @@ pp-dice/
 │   ├── chat-badge.test.ts         # Tests for chat badge DOM rendering and deduplication
 │   ├── context-manager.test.ts    # Unit tests for party detection and roll filtering
 │   ├── controls.test.ts           # Scene controls and keybinding registration tests
-│   ├── interceptor.test.ts        # Unit tests for term extraction, injection, and queueing
+│   ├── generic.test.ts            # Unit tests for generic Foundry actor and initiative resolution
+│   ├── interceptor.test.ts        # Unit tests for term extraction, injection, queueing, and initiative wrappers
+│   ├── pf2e.test.ts               # Unit tests for PF2e/SF2e party, identifier, and initiative resolution
 │   ├── resolver.test.ts           # Resolver dialog tests, input validation, and keyboard shortcuts
 │   └── roll-helpers.test.ts       # Unit tests for secret roll and fortune detection helpers
 └── docs/                          # Documentation plane (user-guide, spec, design, adr, dev)

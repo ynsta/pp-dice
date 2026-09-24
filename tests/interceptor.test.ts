@@ -553,6 +553,13 @@ describe('Initiative Interception & Check Context', () => {
     expect(getPf2eActiveCheckContext()).toBeNull();
   });
 
+  it('allows multiple calls to registerInitiativeInterception without error', () => {
+    expect(() => {
+      registerInitiativeInterception();
+      registerInitiativeInterception();
+    }).not.toThrow();
+  });
+
   it('is idempotent on repeated registrations without libWrapper', () => {
     class MockCombatant {
       actor = { id: 'actor-1' };
@@ -581,6 +588,26 @@ describe('Initiative Interception & Check Context', () => {
     (globalThis as any).CONFIG = { Combatant: { documentClass: EmptyCombatant } };
 
     expect(() => registerInitiativeInterception()).not.toThrow();
+  });
+
+  it('allows multiple calls to registerInitiativeInterception without error when libWrapper throws on duplicate registration', () => {
+    const registered = new Set<string>();
+    (globalThis as any).libWrapper = {
+      register: vi.fn((_mod, target) => {
+        if (registered.has(target)) throw new Error(`Already registered ${target}`);
+        registered.add(target);
+      }),
+    };
+    class MockCombatant {
+      getInitiativeRoll() {}
+    }
+    (globalThis as any).Combatant = MockCombatant;
+    (globalThis as any).game = { pf2e: { Check: { roll: vi.fn() } } };
+
+    expect(() => {
+      registerInitiativeInterception();
+      registerInitiativeInterception();
+    }).not.toThrow();
   });
 
   it('forwards multiple arguments in Combatant.prototype.getInitiativeRoll', () => {

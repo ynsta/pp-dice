@@ -1,5 +1,5 @@
 import { FLAGS, MODULE_ID, SETTINGS } from './constants';
-import { registerInterception } from './core/interceptor';
+import { registerInterception, registerInitiativeInterception } from './core/interceptor';
 import { registerKeybindings, registerSceneControls } from './ui/controls';
 import { renderChatBadge } from './ui/chat-badge';
 import './styles/pp-dice.css';
@@ -47,8 +47,9 @@ Hooks?.once('init', () => {
   // Register keybindings in init so they show up in Configure Controls
   registerKeybindings();
 
-  // Register roll interception
+  // Register roll and initiative interception
   registerInterception();
+  registerInitiativeInterception();
 });
 
 export function onDiceSoNiceMessagePreProcess(
@@ -82,6 +83,9 @@ export function onPreCreateChatMessage(message: any): void {
 Hooks?.once('ready', () => {
   // Register scene controls button
   registerSceneControls();
+
+  // Ensure initiative wrappers are bound if system initialized after module init
+  registerInitiativeInterception();
 
   // Register DSN animation suppression hooks
   Hooks.on('diceSoNiceMessagePreProcess', onDiceSoNiceMessagePreProcess);

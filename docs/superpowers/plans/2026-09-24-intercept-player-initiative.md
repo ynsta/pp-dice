@@ -24,10 +24,12 @@
 ### Task 1: Initiative Interception Wrappers in Core Interceptor
 
 **Files:**
+
 - Modify: `src/core/interceptor.ts:115-144`
 - Test: `tests/interceptor.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `activeCheckContext: any` tracking module-level active check context.
   - `getPf2eActiveCheckContext(): any`: helper returning current active check context.
@@ -40,7 +42,11 @@
 ```typescript
 it('tags rolls with actor and combatant in Combatant.prototype.getInitiativeRoll', () => {
   const mockActor = { id: 'actor-pc', name: 'Valeros', type: 'character', hasPlayerOwner: true };
-  const mockCombatant = { id: 'combatant-1', actor: mockActor, _getInitiativeFormula: () => '1d20+2' };
+  const mockCombatant = {
+    id: 'combatant-1',
+    actor: mockActor,
+    _getInitiativeFormula: () => '1d20+2',
+  };
 
   class MockCombatant {
     actor = mockActor;
@@ -157,15 +163,20 @@ export function registerInitiativeInterception(): void {
     }
   }
 
-  const checkCls =
-    (globalThis as any).game?.pf2e?.Check ?? (globalThis as any).game?.sf2e?.Check;
+  const checkCls = (globalThis as any).game?.pf2e?.Check ?? (globalThis as any).game?.sf2e?.Check;
   if (checkCls?.roll) {
     if (libWrapper) {
       try {
         libWrapper.register(
           MODULE_ID,
           `${(globalThis as any).game?.pf2e ? 'game.pf2e' : 'game.sf2e'}.Check.roll`,
-          async function (wrapped: any, check: any, context: any = {}, event: any = null, callback: any = null) {
+          async function (
+            wrapped: any,
+            check: any,
+            context: any = {},
+            event: any = null,
+            callback: any = null
+          ) {
             if (context?.actor && !context.identifier && context.actor.uuid) {
               context.identifier = context.actor.uuid;
             }
@@ -221,10 +232,12 @@ git commit -m "feat: add Combatant and PF2e/SF2e Check initiative interception w
 ### Task 2: PF2e & SF2e Provider Initiative Roll Resolution & Title
 
 **Files:**
+
 - Modify: `src/providers/pf2e.ts:12-110`
 - Test: `tests/pf2e.test.ts`
 
 **Interfaces:**
+
 - Consumes:
   - `getPf2eActiveCheckContext` from `src/core/interceptor.ts`.
 - Produces:
@@ -339,64 +352,75 @@ Expected: FAIL (initiative context / title not resolved)
 - [ ] **Step 3: Update `PF2eContextProvider.resolveContext` and `resolveTitle` in `src/providers/pf2e.ts`**
 
 Import `getPf2eActiveCheckContext` in `src/providers/pf2e.ts`:
+
 ```typescript
 import { getPf2eActiveCheckContext } from '../core/interceptor';
 ```
 
 In `PF2eContextProvider.resolveContext`:
-```typescript
-    // Check active check context from Check.roll wrapper
-    const activeCheck = getPf2eActiveCheckContext();
-    if (!actor && activeCheck?.actor) {
-      actor = activeCheck.actor;
-      if (!token && activeCheck.token) {
-        token = activeCheck.token;
-      }
-      (roll as any)._pf2eContext = activeCheck;
-    }
 
-    if (!actor && (roll as any)._pf2eContext?.actor) {
-      actor = (roll as any)._pf2eContext.actor;
-    }
+```typescript
+// Check active check context from Check.roll wrapper
+const activeCheck = getPf2eActiveCheckContext();
+if (!actor && activeCheck?.actor) {
+  actor = activeCheck.actor;
+  if (!token && activeCheck.token) {
+    token = activeCheck.token;
+  }
+  (roll as any)._pf2eContext = activeCheck;
+}
+
+if (!actor && (roll as any)._pf2eContext?.actor) {
+  actor = (roll as any)._pf2eContext.actor;
+}
 ```
+
 And in identifier resolution:
-```typescript
-    // Match item identifier or actor UUID
-    if (!actor && typeof roll.options?.identifier === 'string') {
-      const identifier = roll.options.identifier;
-      if (identifier.startsWith('Actor.') || identifier.startsWith('Scene.')) {
-        const doc = (globalThis as any).fromUuidSync?.(identifier);
-        actor = doc?.actor ?? doc ?? null;
-      } else {
-        const itemId = identifier.split('.')[0];
-        if (itemId) {
-          actor =
-            game?.actors?.find?.((a: any) =>
-              typeof a.items?.has === 'function'
-                ? a.items.has(itemId)
-                : a.items?.some?.((i: any) => i?.id === itemId || i?._id === itemId)
-            ) ?? null;
-        }
-      }
-    }
-```
-And in action resolution:
-```typescript
-    let action = roll.options?.action ?? (roll as any)._pf2eContext?.action ?? null;
-    if (!action && (roll.options?.type === 'initiative' || roll.options?.domains?.includes?.('initiative'))) {
-      action = 'initiative';
-    }
-```
-In `PF2eContextProvider.resolveTitle`:
-```typescript
-    const isInitiative =
-      roll?.options?.type === 'initiative' ||
-      roll?.options?.domains?.includes?.('initiative') ||
-      (roll as any)?._pf2eContext?.type === 'initiative';
 
-    if (isInitiative) {
-      return `${actorName} — Initiative`;
+```typescript
+// Match item identifier or actor UUID
+if (!actor && typeof roll.options?.identifier === 'string') {
+  const identifier = roll.options.identifier;
+  if (identifier.startsWith('Actor.') || identifier.startsWith('Scene.')) {
+    const doc = (globalThis as any).fromUuidSync?.(identifier);
+    actor = doc?.actor ?? doc ?? null;
+  } else {
+    const itemId = identifier.split('.')[0];
+    if (itemId) {
+      actor =
+        game?.actors?.find?.((a: any) =>
+          typeof a.items?.has === 'function'
+            ? a.items.has(itemId)
+            : a.items?.some?.((i: any) => i?.id === itemId || i?._id === itemId)
+        ) ?? null;
     }
+  }
+}
+```
+
+And in action resolution:
+
+```typescript
+let action = roll.options?.action ?? (roll as any)._pf2eContext?.action ?? null;
+if (
+  !action &&
+  (roll.options?.type === 'initiative' || roll.options?.domains?.includes?.('initiative'))
+) {
+  action = 'initiative';
+}
+```
+
+In `PF2eContextProvider.resolveTitle`:
+
+```typescript
+const isInitiative =
+  roll?.options?.type === 'initiative' ||
+  roll?.options?.domains?.includes?.('initiative') ||
+  (roll as any)?._pf2eContext?.type === 'initiative';
+
+if (isInitiative) {
+  return `${actorName} — Initiative`;
+}
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -416,10 +440,12 @@ git commit -m "feat: support PF2e and SF2e initiative roll context resolution an
 ### Task 3: Generic Provider Initiative Roll Resolution & Title
 
 **Files:**
+
 - Modify: `src/providers/generic.ts:10-70`
 - Test: `tests/generic.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `GenericContextProvider.resolveContext(roll, options)`: resolves actor from `(roll as any)._actor` or `(roll as any)._combatant?.actor`.
   - `GenericContextProvider.resolveTitle(roll, actor, item, options)`: returns `"${actorName} — Initiative"` when roll is tagged as initiative.
@@ -488,28 +514,36 @@ Expected: FAIL (actor resolution from `_actor` not handled, title not formatted)
 - [ ] **Step 3: Update `GenericContextProvider.resolveContext` and `resolveTitle` in `src/providers/generic.ts`**
 
 In `GenericContextProvider.resolveContext`:
-```typescript
-    // 1. Identify Actor
-    let actor = roll.data?.actor ?? (roll as any)._actor ?? (roll as any)._combatant?.actor ?? null;
-    let token = roll.data?.token ?? (roll as any)._combatant?.token ?? null;
-```
-And action:
-```typescript
-    let action = roll.options?.action ?? null;
-    if (!action && (roll.options?.type === 'initiative' || roll.options?.initiative || (roll as any)._combatant)) {
-      action = 'initiative';
-    }
-```
-In `GenericContextProvider.resolveTitle`:
-```typescript
-    const isInitiative =
-      roll?.options?.type === 'initiative' ||
-      roll?.options?.initiative === true ||
-      (roll as any)?._combatant != null;
 
-    if (isInitiative) {
-      return `${actorName} — Initiative`;
-    }
+```typescript
+// 1. Identify Actor
+let actor = roll.data?.actor ?? (roll as any)._actor ?? (roll as any)._combatant?.actor ?? null;
+let token = roll.data?.token ?? (roll as any)._combatant?.token ?? null;
+```
+
+And action:
+
+```typescript
+let action = roll.options?.action ?? null;
+if (
+  !action &&
+  (roll.options?.type === 'initiative' || roll.options?.initiative || (roll as any)._combatant)
+) {
+  action = 'initiative';
+}
+```
+
+In `GenericContextProvider.resolveTitle`:
+
+```typescript
+const isInitiative =
+  roll?.options?.type === 'initiative' ||
+  roll?.options?.initiative === true ||
+  (roll as any)?._combatant != null;
+
+if (isInitiative) {
+  return `${actorName} — Initiative`;
+}
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -529,10 +563,12 @@ git commit -m "feat: support generic Foundry combatant initiative resolution and
 ### Task 4: Main Initialization Hook Integration & Fallback Registration
 
 **Files:**
+
 - Modify: `src/main.ts:1-100`
 - Test: `tests/interceptor.test.ts`
 
 **Interfaces:**
+
 - Consumes:
   - `registerInitiativeInterception` from `src/core/interceptor.ts`.
 - Produces:
@@ -557,21 +593,24 @@ Expected: PASS
 - [ ] **Step 3: Update `src/main.ts` to call `registerInitiativeInterception`**
 
 Import `registerInitiativeInterception` from `./core/interceptor`:
+
 ```typescript
 import { registerInterception, registerInitiativeInterception } from './core/interceptor';
 ```
 
 In `Hooks.once('init')`:
+
 ```typescript
-  // Register roll and initiative interception
-  registerInterception();
-  registerInitiativeInterception();
+// Register roll and initiative interception
+registerInterception();
+registerInitiativeInterception();
 ```
 
 In `Hooks.once('ready')`:
+
 ```typescript
-  // Ensure initiative wrappers are bound if system initialized after module init
-  registerInitiativeInterception();
+// Ensure initiative wrappers are bound if system initialized after module init
+registerInitiativeInterception();
 ```
 
 - [ ] **Step 4: Run full test and validation suite**
@@ -591,12 +630,14 @@ git commit -m "feat: initialize initiative interception on init and ready hooks"
 ### Task 5: Documentation & Changelog
 
 **Files:**
+
 - Modify: `docs/spec/physical-dice-interception.md`
 - Modify: `CHANGELOG.md`
 
 - [ ] **Step 1: Update `docs/spec/physical-dice-interception.md`**
 
 Add section 3.5 documenting initiative roll interception:
+
 - Combat Tracker and sheet initiative interception for player characters (`type === 'character'`).
 - Automatic digital RNG bypass for NPC combatants.
 - Sequential prompt queue when multiple combatants roll at once.
@@ -605,6 +646,7 @@ Add section 3.5 documenting initiative roll interception:
 - [ ] **Step 2: Update `CHANGELOG.md`**
 
 Add `[1.0.13]` entry:
+
 - Feature: Intercept initiative rolls for player characters from the Combat Tracker and character sheet.
 - Feature: Support PF2e, SF2e, and generic Foundry systems for player initiative.
 - Feature: Sequential prompt queue for multiple player initiatives rolled together ("Roll All PCs" / "Roll All").

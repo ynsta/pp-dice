@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   extractDiceTerms,
   applyPhysicalResults,
   interceptRollEvaluation,
+  registerInitiativeInterception,
+  getPf2eActiveCheckContext,
+  setPf2eActiveCheckContext,
+  clearPf2eActiveCheckContext,
 } from '../src/core/interceptor';
 import { contextManager } from '../src/core/context-manager';
 import { PPDiceResolver } from '../src/ui/pp-dice-resolver';
@@ -333,5 +337,241 @@ describe('Dice Interceptor Engine', () => {
 
     expect(options.skip3d).toBeUndefined();
     expect((mockRoll as any).ghost).toBeUndefined();
+  });
+});
+
+describe('Initiative Interception & Check Context', () => {
+  afterEach(() => {
+    delete (globalThis as any).Combatant;
+    delete (globalThis as any).CONFIG;
+    delete (globalThis as any).game;
+    delete (globalThis as any).Roll;
+    delete (globalThis as any).libWrapper;
+    clearPf2eActiveCheckContext();
+  });
+
+  it('tags rolls with actor and combatant in Combatant.prototype.getInitiativeRoll', () => {
+    const mockActor = { id: 'actor-pc', name: 'Valeros', type: 'character', hasPlayerOwner: true };
+
+    class MockCombatant {
+      actor = mockActor;
+      _getInitiativeFormula() {
+        return '1d20+2';
+      }
+      getInitiativeRoll(formula?: string) {
+        return (globalThis as any).Roll.create(formula || this._getInitiativeFormula());
+      }
+    }
+
+    (globalThis as any).Roll = {
+      create: (formula: string) => ({
+        formula,
+        options: {},
+      }),
+    };
+    (globalThis as any).Combatant = MockCombatant;
+    (globalThis as any).CONFIG = { Combatant: { documentClass: MockCombatant } };
+
+    registerInitiativeInterception();
+
+    const combatant = new MockCombatant();
+    const roll = combatant.getInitiativeRoll();
+
+    expect((roll as any)._actor).toBe(mockActor);
+    expect((roll as any)._combatant).toBe(combatant);
+    expect(roll.options?.type).toBe('initiative');
+    expect(roll.options?.initiative).toBe(true);
+  });
+
+  it('tags rolls with actor and combatant using libWrapper when available', () => {
+    const mockActor = { id: 'actor-pc', name: 'Valeros', type: 'character', hasPlayerOwner: true };
+
+    class MockCombatant {
+      actor = mockActor;
+      _getInitiativeFormula() {
+        return '1d20+2';
+      }
+      getInitiativeRoll(formula?: string) {
+        return { formula: formula || '1d20+2', options: {} };
+      }
+    }
+
+    (globalThis as any).Combatant = MockCombatant;
+    (globalThis as any).CONFIG = { Combatant: { documentClass: MockCombatant } };
+
+    const registeredWrappers: Record<string, (...args: any[]) => any> = {};
+    (globalThis as any).libWrapper = {
+      register: vi.fn((_mod, target, fn, _type) => {
+        registeredWrappers[target] = fn;
+      }),
+    };
+
+    registerInitiativeInterception();
+
+    expect((globalThis as any).libWrapper.register).toHaveBeenCalledWith(
+      MODULE_ID,
+      'Combatant.prototype.getInitiativeRoll',
+      expect.any(Function),
+      'WRAPPER'
+    );
+
+    const combatant = new MockCombatant();
+    const wrappedFn = registeredWrappers['Combatant.prototype.getInitiativeRoll'];
+    expect(wrappedFn).toBeDefined();
+    const fakeWrapped = (formula?: string) => ({ formula: formula || '1d20+2', options: {} });
+    const roll = wrappedFn!.call(combatant, fakeWrapped, '1d20+2');
+
+    expect(roll._actor).toBe(mockActor);
+    expect(roll._combatant).toBe(combatant);
+    expect(roll.options?.type).toBe('initiative');
+    expect(roll.options?.initiative).toBe(true);
+  });
+
+  it('preserves context in PF2e/SF2e Check.roll wrapper', async () => {
+    const mockActor = { id: 'actor-pc', uuid: 'Actor.pc1', name: 'Ezren', type: 'character' };
+    const mockContext: any = { actor: mockActor, type: 'initiative', skipDialog: true };
+    let capturedContext: any = null;
+
+    (globalThis as any).game = {
+      pf2e: {
+        Check: {
+          roll: async (_check: any, _context: any) => {
+            capturedContext = getPf2eActiveCheckContext();
+            return { evaluated: true, total: 15 };
+          },
+        },
+      },
+    };
+
+    registerInitiativeInterception();
+
+    await (globalThis as any).game.pf2e.Check.roll({}, mockContext);
+
+    expect(capturedContext).toBe(mockContext);
+    expect(mockContext.identifier).toBe('Actor.pc1');
+    expect(getPf2eActiveCheckContext()).toBeNull();
+  });
+
+  it('preserves context in PF2e/SF2e Check.roll wrapper with libWrapper', async () => {
+    const mockActor = { id: 'actor-pc', uuid: 'Actor.pc1', name: 'Ezren', type: 'character' };
+    const mockContext: any = { actor: mockActor, type: 'initiative', skipDialog: true };
+    let capturedContext: any = null;
+
+    (globalThis as any).game = {
+      pf2e: {
+        Check: {
+          roll: async (_check: any, _context: any) => ({ evaluated: true, total: 15 }),
+        },
+      },
+    };
+
+    const registeredWrappers: Record<string, (...args: any[]) => any> = {};
+    (globalThis as any).libWrapper = {
+      register: vi.fn((_mod, target, fn, _type) => {
+        registeredWrappers[target] = fn;
+      }),
+    };
+
+    registerInitiativeInterception();
+
+    expect((globalThis as any).libWrapper.register).toHaveBeenCalledWith(
+      MODULE_ID,
+      'game.pf2e.Check.roll',
+      expect.any(Function),
+      'WRAPPER'
+    );
+
+    const wrappedFn = registeredWrappers['game.pf2e.Check.roll'];
+    expect(wrappedFn).toBeDefined();
+    const fakeWrapped = vi.fn().mockImplementation(async (_check: any, _context: any) => {
+      capturedContext = getPf2eActiveCheckContext();
+      return { evaluated: true, total: 15 };
+    });
+
+    await wrappedFn!(fakeWrapped, {}, mockContext);
+
+    expect(capturedContext).toBe(mockContext);
+    expect(mockContext.identifier).toBe('Actor.pc1');
+    expect(getPf2eActiveCheckContext()).toBeNull();
+  });
+
+  it('supports SF2e Check.roll when game.sf2e is present instead of game.pf2e', async () => {
+    const mockActor = { id: 'actor-sf', uuid: 'Actor.sf1', name: 'Raia', type: 'character' };
+    const mockContext: any = { actor: mockActor, type: 'initiative', skipDialog: true };
+    let capturedContext: any = null;
+
+    (globalThis as any).game = {
+      sf2e: {
+        Check: {
+          roll: async (_check: any, _context: any) => {
+            capturedContext = getPf2eActiveCheckContext();
+            return { evaluated: true, total: 18 };
+          },
+        },
+      },
+    };
+
+    registerInitiativeInterception();
+
+    await (globalThis as any).game.sf2e.Check.roll({}, mockContext);
+
+    expect(capturedContext).toBe(mockContext);
+    expect(mockContext.identifier).toBe('Actor.sf1');
+    expect(getPf2eActiveCheckContext()).toBeNull();
+  });
+
+  it('clears active check context even if wrapped Check.roll throws', async () => {
+    const mockActor = { id: 'actor-pc', uuid: 'Actor.pc1', name: 'Ezren' };
+    const mockContext: any = { actor: mockActor };
+
+    (globalThis as any).game = {
+      pf2e: {
+        Check: {
+          roll: async () => {
+            expect(getPf2eActiveCheckContext()).toBe(mockContext);
+            throw new Error('Check.roll failed');
+          },
+        },
+      },
+    };
+
+    registerInitiativeInterception();
+
+    await expect((globalThis as any).game.pf2e.Check.roll({}, mockContext)).rejects.toThrow(
+      'Check.roll failed'
+    );
+
+    expect(getPf2eActiveCheckContext()).toBeNull();
+  });
+
+  it('provides getPf2eActiveCheckContext, setPf2eActiveCheckContext, and clearPf2eActiveCheckContext helpers', () => {
+    expect(getPf2eActiveCheckContext()).toBeNull();
+    const testCtx = { test: 123 };
+    setPf2eActiveCheckContext(testCtx);
+    expect(getPf2eActiveCheckContext()).toBe(testCtx);
+    clearPf2eActiveCheckContext();
+    expect(getPf2eActiveCheckContext()).toBeNull();
+  });
+
+  it('is idempotent on repeated registrations without libWrapper', () => {
+    class MockCombatant {
+      actor = { id: 'actor-1' };
+      _getInitiativeFormula() {
+        return '1d20';
+      }
+      getInitiativeRoll(formula?: string) {
+        return { formula: formula || '1d20', options: {} };
+      }
+    }
+
+    (globalThis as any).Combatant = MockCombatant;
+    (globalThis as any).CONFIG = { Combatant: { documentClass: MockCombatant } };
+
+    registerInitiativeInterception();
+    const wrappedOnce = MockCombatant.prototype.getInitiativeRoll;
+    registerInitiativeInterception();
+    const wrappedTwice = MockCombatant.prototype.getInitiativeRoll;
+
+    expect(wrappedOnce).toBe(wrappedTwice);
   });
 });

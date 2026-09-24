@@ -141,3 +141,120 @@ export function registerInterception(): void {
     }
   }
 }
+
+let activeCheckContext: any = null;
+
+export function getPf2eActiveCheckContext(): any {
+  return activeCheckContext;
+}
+
+export function setPf2eActiveCheckContext(context: any): void {
+  activeCheckContext = context;
+}
+
+export function clearPf2eActiveCheckContext(): void {
+  activeCheckContext = null;
+}
+
+export function registerInitiativeInterception(): void {
+  const libWrapper = (globalThis as any).libWrapper;
+  const CombatantClass =
+    (globalThis as any).CONFIG?.Combatant?.documentClass ?? (globalThis as any).Combatant;
+
+  if (CombatantClass?.prototype) {
+    if (libWrapper) {
+      try {
+        libWrapper.register(
+          MODULE_ID,
+          'Combatant.prototype.getInitiativeRoll',
+          function (this: any, wrapped: any, formula: string) {
+            const roll = wrapped(formula);
+            if (roll) {
+              (roll as any)._actor = this.actor;
+              (roll as any)._combatant = this;
+              roll.options = roll.options || {};
+              roll.options.type = 'initiative';
+              roll.options.initiative = true;
+            }
+            return roll;
+          },
+          'WRAPPER'
+        );
+      } catch {
+        // Ignored if already registered
+      }
+    } else {
+      if (!(CombatantClass.prototype.getInitiativeRoll as any)?._ppDiceWrapped) {
+        const originalGetInitiativeRoll = CombatantClass.prototype.getInitiativeRoll;
+        const wrappedGetInitiativeRoll = function (this: any, formula?: string) {
+          const roll = originalGetInitiativeRoll.call(this, formula);
+          if (roll) {
+            (roll as any)._actor = this.actor;
+            (roll as any)._combatant = this;
+            roll.options = roll.options || {};
+            roll.options.type = 'initiative';
+            roll.options.initiative = true;
+          }
+          return roll;
+        };
+        (wrappedGetInitiativeRoll as any)._ppDiceWrapped = true;
+        CombatantClass.prototype.getInitiativeRoll = wrappedGetInitiativeRoll;
+      }
+    }
+  }
+
+  const checkCls = (globalThis as any).game?.pf2e?.Check ?? (globalThis as any).game?.sf2e?.Check;
+  if (checkCls?.roll) {
+    if (libWrapper) {
+      try {
+        libWrapper.register(
+          MODULE_ID,
+          `${(globalThis as any).game?.pf2e ? 'game.pf2e' : 'game.sf2e'}.Check.roll`,
+          async function (
+            wrapped: any,
+            check: any,
+            context: any = {},
+            event: any = null,
+            callback: any = null
+          ) {
+            if (context?.actor && !context.identifier && context.actor.uuid) {
+              context.identifier = context.actor.uuid;
+            }
+            setPf2eActiveCheckContext(context);
+            try {
+              return await wrapped(check, context, event, callback);
+            } finally {
+              clearPf2eActiveCheckContext();
+            }
+          },
+          'WRAPPER'
+        );
+      } catch {
+        // Ignored if already registered
+      }
+    } else {
+      if (!(checkCls.roll as any)?._ppDiceWrapped) {
+        const originalCheckRoll = checkCls.roll;
+        const wrappedCheckRoll = async function (
+          this: any,
+          check: any,
+          context: any = {},
+          event: any = null,
+          callback: any = null
+        ) {
+          if (context?.actor && !context.identifier && context.actor.uuid) {
+            context.identifier = context.actor.uuid;
+          }
+          setPf2eActiveCheckContext(context);
+          try {
+            return await originalCheckRoll.call(this, check, context, event, callback);
+          } finally {
+            clearPf2eActiveCheckContext();
+          }
+        };
+        (wrappedCheckRoll as any)._ppDiceWrapped = true;
+        checkCls.roll = wrappedCheckRoll;
+      }
+    }
+  }
+}

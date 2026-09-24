@@ -23,8 +23,9 @@ While **system-agnostic** (supporting core Foundry rolls on any system), `pp-dic
 ## Features
 
 - **Smart Party & Player Detection**: Automatically identifies player characters via party membership, character type, and token ownership.
+- **Initiative Interception**: Intercepts player character initiative rolls from the Combat Tracker ("Roll All", "Roll PCs", or token tracker icons) and character sheets. Prompts for player physical rolls sequentially, while letting NPC monsters roll instantly via digital RNG without GM interruption.
 - **Selective Interception**:
-  - **Public Player Rolls** (Attacks, Saves, Skills, Damage) $\rightarrow$ Fast popup on GM screen to input physical dice.
+  - **Public Player Rolls** (Attacks, Saves, Skills, Perception, Initiative, Damage) $\rightarrow$ Fast popup on GM screen to input physical dice.
   - **Secret / Blind Rolls** (Recall Knowledge, Stealth, Secret Perception) $\rightarrow$ Automatically rolls digital RNG (keeps results hidden).
   - **NPC & Monster Rolls** $\rightarrow$ Automatically rolls digital RNG.
 - **Keyboard-First Dialog**:
@@ -35,7 +36,8 @@ While **system-agnostic** (supporting core Foundry rolls on any system), `pp-dic
   - Space key is suppressed inside the dialog to prevent accidental canvas pausing.
   - Grouped inputs for multi-die damage (e.g., 2d6, 3d8).
 - **Fortune & Misfortune Support**: Shows clear visual badges (`Fortune — Keep Highest` / `Misfortune — Keep Lowest`) and prompts for both d20 dice, faithfully evaluated by Foundry's native keep/drop modifiers.
-- **Sequential Queue**: Seamlessly queues rolls when multiple saving throws or actions trigger sequentially (e.g., Area of Effect spells).
+- **Sequential Queue**: Seamlessly queues rolls when multiple saving throws or initiatives trigger simultaneously (e.g., Area of Effect spells or "Roll All" in combat).
+- **System Agnostic & Deep 2e Support**: Works on any Foundry system via generic provider; features deep native integration for **Pathfinder 2e** and **Starfinder 2e (SF2e)**.
 - **Chat Log Badges**: Tags manual rolls with a subtle `Physical` / `Dés physiques` badge in chat.
 - **Dice So Nice Support**: 3D dice land directly on the numbers rolled physically at the table.
 - **Quick Session Toggle**: Press `Alt+P` (registered in `init` and fully configurable in Foundry's _Configure Controls_) or use the token control tool to enable/disable interception on the fly.

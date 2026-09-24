@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.9] - 2026-09-23
+## [1.0.10] - 2026-09-24
+
+### Fixed
+
+- **Foundry v14 Scene Controls:** Adapted `getSceneControlButtons` hook to support Foundry v14 `Record<string, SceneControl>` structure and `onChange` callback on `tokens` layer, with defensive fallback for legacy arrays.
+- **Resolver Queue Deadlock Protection:** Caught asynchronous and synchronous `ApplicationV2.render()` rejections to guarantee the sequential roll queue promise always settles via digital fallback.
+- **Resolver Keydown Scoping:** Restricted window-level capture listeners to the resolver modal element or document body, preventing key hijacking in chat, journals, or external inputs.
+- **Roll Secrecy & v14 `messageMode`:** Unified secret roll detection in `roll-helpers.ts` across `messageMode`, `rollMode`, and core settings; prevented prompts on secret/blind/gm/self rolls.
+- **Input Validation & Sanitization:** Enforced strict integer validation within `1..faces` on physical dice submit; clamped injected term values in `applyPhysicalResults`.
+- **Dice So Nice 3D Dice Skip:** Migrated 3D animation suppression to official DSN hooks (`diceSoNiceMessagePreProcess` and `flags.dice-so-nice.skip`), eliminating roll option mutations.
+- **Modern Chat Hook:** Upgraded chat badge injection to modern Foundry `renderChatMessageHTML` hook and safe DOM element creation.
+- **Sub-roll Bypass:** Bypassed interception when `roll._root` is present to avoid intercepting inner terms of parenthetical or pool expressions.
+- **Fortune / Misfortune Accuracy:** Switched fortune and misfortune detection to term modifier inspection (`2d20kh`/`2d20kl`) instead of formula substring matching.
+- **Privacy & Hygiene:** Scrubbed personal machine paths from example configs and documentation; secured CI workflows with explicit read permissions and version consistency checks.
+
+### Changed
+
+- Polished English and French tabletop RPG terminology across all localization keys.
 
 ### Added
 

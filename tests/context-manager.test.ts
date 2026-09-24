@@ -71,9 +71,9 @@ describe('ContextManager & Providers', () => {
     expect(provider.isPlayerActor(monsterActor)).toBe(false);
   });
 
-  it('does not identify unowned character as player (M6)', () => {
+  it('identifies character actor as player even if hasPlayerOwner is false (in-person play)', () => {
     const provider = new PF2eContextProvider();
-    const unownedCharacter = {
+    const characterActor = {
       uuid: 'Actor.pregen',
       id: 'pregen',
       name: 'Unowned Pregen',
@@ -82,7 +82,7 @@ describe('ContextManager & Providers', () => {
       parties: new Set(),
     };
 
-    expect(provider.isPlayerActor(unownedCharacter)).toBe(false);
+    expect(provider.isPlayerActor(characterActor)).toBe(true);
   });
 
   it('identifies secret rolls accurately (H4)', () => {
@@ -144,11 +144,11 @@ describe('ContextManager & Providers', () => {
     expect(provider.detectMisfortune(misfortuneOption)).toBe(true);
   });
 
-  it('does not use controlled token fallback on untargeted rolls (M6)', () => {
+  it('uses controlled token fallback for single selected token and recognizes character type without player owner', () => {
     const pcActor = {
       id: 'pc1',
       name: 'Player Fighter',
-      hasPlayerOwner: true,
+      hasPlayerOwner: false, // in-person play or unassigned pregen character
       type: 'character',
     };
     (globalThis as any).canvas = {
@@ -157,56 +157,73 @@ describe('ContextManager & Providers', () => {
       },
     };
 
-    // Untargeted roll (e.g. GM rolls /r 1d20 with PC token selected)
+    // Untargeted / standard roll (e.g. PF2e CheckRoll or GM roll with PC token selected)
     const rawRoll = {
-      formula: '1d20',
-      data: {},
-      options: {},
-    };
-
-    const pf2eProvider = new PF2eContextProvider();
-    const pf2eCtx = pf2eProvider.resolveContext(rawRoll);
-    expect(pf2eCtx?.actor).toBeNull();
-    expect(pf2eCtx?.isPlayer).toBe(false);
-
-    mockGame.system.id = 'dnd5e';
-    const genericProvider = new GenericContextProvider();
-    const genericCtx = genericProvider.resolveContext(rawRoll);
-    expect(genericCtx.actor).toBeNull();
-    expect(genericCtx.isPlayer).toBe(false);
-  });
-
-  it('uses controlled token fallback when roll explicitly targets actor/token (M6)', () => {
-    const pcActor = {
-      id: 'pc1',
-      name: 'Player Fighter',
-      hasPlayerOwner: true,
-      type: 'character',
-    };
-    (globalThis as any).canvas = {
-      tokens: {
-        controlled: [{ actor: pcActor }],
-      },
-    };
-
-    // Roll with explicit speaker target but unresolved actor
-    const targetedRoll = {
       formula: '1d20+3',
       data: {},
-      options: { speaker: { token: 'token123' } },
+      options: { type: 'attack-roll' },
     };
 
     mockGame.system.id = 'pf2e';
     const pf2eProvider = new PF2eContextProvider();
-    const pf2eCtx = pf2eProvider.resolveContext(targetedRoll);
+    const pf2eCtx = pf2eProvider.resolveContext(rawRoll);
     expect(pf2eCtx?.actor).toBe(pcActor);
     expect(pf2eCtx?.isPlayer).toBe(true);
 
     mockGame.system.id = 'dnd5e';
     const genericProvider = new GenericContextProvider();
-    const genericCtx = genericProvider.resolveContext(targetedRoll);
+    const genericCtx = genericProvider.resolveContext(rawRoll);
     expect(genericCtx.actor).toBe(pcActor);
     expect(genericCtx.isPlayer).toBe(true);
+  });
+
+  it('does not treat NPC controlled tokens as players', () => {
+    const npcActor = {
+      id: 'npc1',
+      name: 'Goblin Warrior',
+      hasPlayerOwner: false,
+      type: 'npc',
+    };
+    (globalThis as any).canvas = {
+      tokens: {
+        controlled: [{ actor: npcActor }],
+      },
+    };
+
+    const rawRoll = {
+      formula: '1d20+2',
+      data: {},
+      options: {},
+    };
+
+    mockGame.system.id = 'pf2e';
+    const pf2eProvider = new PF2eContextProvider();
+    const pf2eCtx = pf2eProvider.resolveContext(rawRoll);
+    expect(pf2eCtx?.isPlayer).toBe(false);
+
+    mockGame.system.id = 'dnd5e';
+    const genericProvider = new GenericContextProvider();
+    const genericCtx = genericProvider.resolveContext(rawRoll);
+    expect(genericCtx.isPlayer).toBe(false);
+  });
+
+  it('does not use controlled token fallback when multiple or zero tokens are selected', () => {
+    (globalThis as any).canvas = {
+      tokens: {
+        controlled: [{ actor: { type: 'character' } }, { actor: { type: 'character' } }],
+      },
+    };
+
+    const rawRoll = { formula: '1d20', data: {}, options: {} };
+
+    mockGame.system.id = 'pf2e';
+    const pf2eProvider = new PF2eContextProvider();
+    expect(pf2eProvider.resolveContext(rawRoll)?.actor).toBeNull();
+    expect(pf2eProvider.resolveContext(rawRoll)?.isPlayer).toBe(false);
+
+    (globalThis as any).canvas.tokens.controlled = [];
+    expect(pf2eProvider.resolveContext(rawRoll)?.actor).toBeNull();
+    expect(pf2eProvider.resolveContext(rawRoll)?.isPlayer).toBe(false);
   });
 
   it('shouldIntercept returns true only for public player rolls', () => {

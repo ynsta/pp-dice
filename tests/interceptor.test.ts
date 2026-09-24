@@ -281,6 +281,24 @@ describe('Dice Interceptor Engine', () => {
     expect(shouldInterceptSpy).not.toHaveBeenCalled();
   });
 
+  it('does not bypass interception when roll._root is self-referential', async () => {
+    const shouldInterceptSpy = vi.spyOn(contextManager, 'shouldIntercept').mockReturnValue({
+      intercept: false,
+      context: { isPlayer: false, isSecret: false },
+    });
+    const mockWrapped = vi.fn().mockResolvedValue('roll-result');
+    const selfRootRoll: any = {
+      formula: '1d20',
+      terms: [{ faces: 20, number: 1 }],
+    };
+    selfRootRoll._root = selfRootRoll;
+
+    const result = await interceptRollEvaluation(selfRootRoll, mockWrapped);
+
+    expect(result).toBe('roll-result');
+    expect(shouldInterceptSpy).toHaveBeenCalled();
+  });
+
   it('does not mutate options.skip3d or roll.ghost during physical roll evaluation (M2)', async () => {
     (globalThis as any).game = {
       settings: {

@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.10] - 2026-09-24
+## [1.0.11] - 2026-09-24
 
 ### Fixed
+
+- **Roll Interception Restoration:** Restored controlled token fallback without requiring explicit target flags, supporting PF2e `CheckRoll` and generic canvas token rolls.
+- **In-person Player Character Support:** Restored `actor.type === 'character'` recognition in PF2e and generic providers, allowing character roll interception in in-person GM-operated games where `hasPlayerOwner` is false.
+- **Defensive Sub-roll Check:** Guarded `roll._root` bypass against self-referential references.
 
 - **Foundry v14 Scene Controls:** Adapted `getSceneControlButtons` hook to support Foundry v14 `Record<string, SceneControl>` structure and `onChange` callback on `tokens` layer, with defensive fallback for legacy arrays.
 - **Resolver Queue Deadlock Protection:** Caught asynchronous and synchronous `ApplicationV2.render()` rejections to guarantee the sequential roll queue promise always settles via digital fallback.

@@ -34,7 +34,7 @@ export async function interceptRollEvaluation(
   options: Record<string, any> = {}
 ): Promise<any> {
   // Skip sub-rolls evaluated as part of a parent roll (M4)
-  if ((roll as any)._root) {
+  if ((roll as any)._root && (roll as any)._root !== roll) {
     return wrapped(options);
   }
 

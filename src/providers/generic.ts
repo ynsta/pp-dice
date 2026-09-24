@@ -18,23 +18,19 @@ export class GenericContextProvider implements RollContextProvider {
       actor = roll.data.token.actor;
     }
 
-    const hasExplicitTarget = Boolean(
-      roll.data?.actor ||
-      roll.data?.token ||
-      roll.options?.actor ||
-      roll.options?.origin ||
-      roll.options?.speaker ||
-      options?.speaker
-    );
-
-    // Fallback to controlled token only if the roll explicitly targets an actor (M6)
-    if (!actor && hasExplicitTarget && canvas?.tokens?.controlled?.length === 1) {
+    // Controlled token fallback when a single token is selected
+    if (!actor && canvas?.tokens?.controlled?.length === 1) {
       token = canvas.tokens.controlled[0];
       actor = token.actor;
     }
 
-    // Require player ownership; do not treat unowned character tokens as players (M6)
-    const isPlayer = Boolean(actor?.hasPlayerOwner === true);
+    // Fallback to assigned user character (e.g. player client rolling from hotbar macro)
+    if (!actor && (globalThis as any).game?.user?.character) {
+      actor = (globalThis as any).game.user.character;
+    }
+
+    // Player owned or character type (supports GM in-person tabletop sessions)
+    const isPlayer = Boolean(actor?.hasPlayerOwner === true || actor?.type === 'character');
     const isSecret = isSecretRoll(roll, options);
     const rollMode = roll.options?.messageMode ?? roll.options?.rollMode;
     const title = actor?.name ? `${actor.name} — Roll` : 'Roll';

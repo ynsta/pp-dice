@@ -36,19 +36,15 @@ export class PF2eContextProvider implements RollContextProvider {
       actor = (globalThis as any).fromUuidSync?.(uuid) ?? null;
     }
 
-    const hasExplicitTarget = Boolean(
-      roll.data?.actor ||
-      roll.data?.token ||
-      roll.options?.actor ||
-      roll.options?.origin ||
-      roll.options?.speaker ||
-      options?.speaker
-    );
-
-    // Fallback to currently controlled token on canvas only if roll explicitly targets an actor (M6)
-    if (!actor && hasExplicitTarget && canvas?.tokens?.controlled?.length === 1) {
+    // Fallback to currently controlled token on canvas
+    if (!actor && canvas?.tokens?.controlled?.length === 1) {
       token = canvas.tokens.controlled[0];
       actor = token.actor;
+    }
+
+    // Fallback to assigned user character (e.g. player client rolling from hotbar macro)
+    if (!actor && game?.user?.character) {
+      actor = game.user.character;
     }
 
     // 2. Check Party & Player Membership
@@ -98,8 +94,13 @@ export class PF2eContextProvider implements RollContextProvider {
       return true;
     }
 
-    // Generic owner checks: require hasPlayerOwner === true (M6: unowned characters are not players)
+    // Generic owner checks
     if (actor.hasPlayerOwner === true) {
+      return true;
+    }
+
+    // Character type (supports GM in-person tabletop sessions and unassigned pregens)
+    if (actor.type === 'character') {
       return true;
     }
 

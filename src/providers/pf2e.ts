@@ -47,6 +47,29 @@ export class PF2eContextProvider implements RollContextProvider {
       actor = game.user.character;
     }
 
+    // Fallback: match item identifier (e.g. "itemId.staff.melee" from PF2e character sheet strikes)
+    if (!actor && typeof roll.options?.identifier === 'string') {
+      const itemId = roll.options.identifier.split('.')[0];
+      if (itemId) {
+        actor =
+          game?.actors?.find?.((a: any) =>
+            typeof a.items?.has === 'function'
+              ? a.items.has(itemId)
+              : a.items?.some?.((i: any) => i?.id === itemId || i?._id === itemId)
+          ) ?? null;
+      }
+    }
+
+    // Fallback: check open actor sheets in ui.windows
+    if (!actor && (globalThis as any).ui?.windows) {
+      const openSheet = Object.values((globalThis as any).ui.windows).find(
+        (w: any) => w?.rendered && w?.actor
+      ) as any;
+      if (openSheet?.actor) {
+        actor = openSheet.actor;
+      }
+    }
+
     // 2. Check Party & Player Membership
     const isPlayer = this.isPlayerActor(actor);
 

@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.11] - 2026-09-24
+## [1.0.12] - 2026-09-24
 
 ### Fixed
+
+- **Character Sheet & Item Strike Interception:** Added item identifier lookup (`roll.options.identifier`) and active sheet lookup (`ui.windows`) so rolls from character sheets are intercepted even when the token is not currently selected on the canvas.
 
 - **Roll Interception Restoration:** Restored controlled token fallback without requiring explicit target flags, supporting PF2e `CheckRoll` and generic canvas token rolls.
 - **In-person Player Character Support:** Restored `actor.type === 'character'` recognition in PF2e and generic providers, allowing character roll interception in in-person GM-operated games where `hasPlayerOwner` is false.

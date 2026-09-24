@@ -29,6 +29,16 @@ export class GenericContextProvider implements RollContextProvider {
       actor = (globalThis as any).game.user.character;
     }
 
+    // Fallback: check open actor sheets in ui.windows
+    if (!actor && (globalThis as any).ui?.windows) {
+      const openSheet = Object.values((globalThis as any).ui.windows).find(
+        (w: any) => w?.rendered && w?.actor
+      ) as any;
+      if (openSheet?.actor) {
+        actor = openSheet.actor;
+      }
+    }
+
     // Player owned or character type (supports GM in-person tabletop sessions)
     const isPlayer = Boolean(actor?.hasPlayerOwner === true || actor?.type === 'character');
     const isSecret = isSecretRoll(roll, options);

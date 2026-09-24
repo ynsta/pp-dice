@@ -226,6 +226,56 @@ describe('ContextManager & Providers', () => {
     expect(pf2eProvider.resolveContext(rawRoll)?.isPlayer).toBe(false);
   });
 
+  it('resolves actor via PF2e item identifier when no token is controlled', () => {
+    (globalThis as any).canvas = { tokens: { controlled: [] } };
+    const ezrenActor = {
+      id: 'ezren1',
+      name: 'Ezren',
+      type: 'character',
+      items: new Map([['staff123', { id: 'staff123', name: 'Staff' }]]),
+    };
+    mockGame.actors = [ezrenActor];
+    mockGame.actors.find = (fn: any) =>
+      mockGame.actors.find ? Array.from(mockGame.actors).find(fn) : null;
+
+    mockGame.system.id = 'pf2e';
+    const pf2eProvider = new PF2eContextProvider();
+    const strikeRoll = {
+      formula: '1d20+3',
+      data: {},
+      options: {
+        type: 'attack-roll',
+        identifier: 'staff123.staff.melee',
+      },
+    };
+
+    const ctx = pf2eProvider.resolveContext(strikeRoll);
+    expect(ctx?.actor).toBe(ezrenActor);
+    expect(ctx?.isPlayer).toBe(true);
+  });
+
+  it('resolves actor via open sheet in ui.windows when no token is controlled', () => {
+    (globalThis as any).canvas = { tokens: { controlled: [] } };
+    const sheetActor = {
+      id: 'sheetActor1',
+      name: 'Valeros',
+      type: 'character',
+    };
+    (globalThis as any).ui = {
+      windows: {
+        123: { rendered: true, actor: sheetActor },
+      },
+    };
+
+    mockGame.system.id = 'pf2e';
+    const pf2eProvider = new PF2eContextProvider();
+    const roll = { formula: '1d20', data: {}, options: {} };
+
+    const ctx = pf2eProvider.resolveContext(roll);
+    expect(ctx?.actor).toBe(sheetActor);
+    expect(ctx?.isPlayer).toBe(true);
+  });
+
   it('shouldIntercept returns true only for public player rolls', () => {
     const playerRoll = {
       data: {

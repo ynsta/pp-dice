@@ -161,14 +161,14 @@ export function registerInitiativeInterception(): void {
   const CombatantClass =
     (globalThis as any).CONFIG?.Combatant?.documentClass ?? (globalThis as any).Combatant;
 
-  if (CombatantClass?.prototype) {
+  if (CombatantClass?.prototype?.getInitiativeRoll) {
     if (libWrapper) {
       try {
         libWrapper.register(
           MODULE_ID,
           'Combatant.prototype.getInitiativeRoll',
-          function (this: any, wrapped: any, formula: string) {
-            const roll = wrapped(formula);
+          function (this: any, wrapped: any, ...args: any[]) {
+            const roll = wrapped(...args);
             if (roll) {
               (roll as any)._actor = this.actor;
               (roll as any)._combatant = this;
@@ -186,8 +186,8 @@ export function registerInitiativeInterception(): void {
     } else {
       if (!(CombatantClass.prototype.getInitiativeRoll as any)?._ppDiceWrapped) {
         const originalGetInitiativeRoll = CombatantClass.prototype.getInitiativeRoll;
-        const wrappedGetInitiativeRoll = function (this: any, formula?: string) {
-          const roll = originalGetInitiativeRoll.call(this, formula);
+        const wrappedGetInitiativeRoll = function (this: any, ...args: any[]) {
+          const roll = originalGetInitiativeRoll.apply(this, args);
           if (roll) {
             (roll as any)._actor = this.actor;
             (roll as any)._combatant = this;
@@ -209,7 +209,7 @@ export function registerInitiativeInterception(): void {
       try {
         libWrapper.register(
           MODULE_ID,
-          `${(globalThis as any).game?.pf2e ? 'game.pf2e' : 'game.sf2e'}.Check.roll`,
+          `${(globalThis as any).game?.pf2e?.Check?.roll ? 'game.pf2e' : 'game.sf2e'}.Check.roll`,
           async function (
             wrapped: any,
             check: any,

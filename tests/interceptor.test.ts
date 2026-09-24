@@ -574,4 +574,57 @@ describe('Initiative Interception & Check Context', () => {
 
     expect(wrappedOnce).toBe(wrappedTwice);
   });
+
+  it('handles CombatantClass without getInitiativeRoll gracefully', () => {
+    class EmptyCombatant {}
+    (globalThis as any).Combatant = EmptyCombatant;
+    (globalThis as any).CONFIG = { Combatant: { documentClass: EmptyCombatant } };
+
+    expect(() => registerInitiativeInterception()).not.toThrow();
+  });
+
+  it('forwards multiple arguments in Combatant.prototype.getInitiativeRoll', () => {
+    let capturedArgs: any[] = [];
+    class MockCombatant {
+      actor = { id: 'actor-1' };
+      getInitiativeRoll(...args: any[]) {
+        capturedArgs = args;
+        return { formula: args[0], options: {} };
+      }
+    }
+
+    (globalThis as any).Combatant = MockCombatant;
+    (globalThis as any).CONFIG = { Combatant: { documentClass: MockCombatant } };
+
+    registerInitiativeInterception();
+
+    const combatant = new MockCombatant();
+    combatant.getInitiativeRoll('2d20kh', { extra: true }, 42);
+
+    expect(capturedArgs).toEqual(['2d20kh', { extra: true }, 42]);
+  });
+
+  it('targets game.sf2e.Check.roll in libWrapper when game.pf2e has no Check.roll', () => {
+    (globalThis as any).game = {
+      pf2e: {},
+      sf2e: {
+        Check: {
+          roll: vi.fn(),
+        },
+      },
+    };
+
+    (globalThis as any).libWrapper = {
+      register: vi.fn(),
+    };
+
+    registerInitiativeInterception();
+
+    expect((globalThis as any).libWrapper.register).toHaveBeenCalledWith(
+      MODULE_ID,
+      'game.sf2e.Check.roll',
+      expect.any(Function),
+      'WRAPPER'
+    );
+  });
 });
